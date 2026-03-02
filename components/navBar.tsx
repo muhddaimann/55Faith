@@ -85,7 +85,7 @@ export function NavBar() {
           alignItems: "center",
           justifyContent: "center",
           paddingHorizontal: tokens.spacing.md,
-          paddingBottom: tokens.spacing.sm,
+          paddingBottom: tokens.spacing.xs,
           borderWidth: 1,
           borderColor: theme.colors.outlineVariant,
         }}

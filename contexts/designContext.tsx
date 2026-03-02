@@ -1,14 +1,33 @@
-import React, { createContext, useContext } from 'react';
-import { DesignTokens } from '../constants/theme';
+import React, { createContext, useContext, useMemo, useState } from "react";
+import {
+  createDesignTokens,
+  design as defaultDesign,
+  type DesignTokens,
+} from "../constants/design";
 
-const DesignContext = createContext(DesignTokens);
-
-export const useDesign = () => useContext(DesignContext);
-
-export const DesignProvider = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <DesignContext.Provider value={DesignTokens}>
-      {children}
-    </DesignContext.Provider>
-  );
+type DesignCtx = {
+  tokens: DesignTokens;
+  scale: number;
+  setScale: (n: number) => void;
 };
+
+const Ctx = createContext<DesignCtx>({
+  tokens: defaultDesign,
+  scale: 1,
+  setScale: () => {},
+});
+
+export function DesignProvider({ children }: { children: React.ReactNode }) {
+  const [scale, setScale] = useState<number>(1);
+  const tokens = useMemo(() => createDesignTokens(scale), [scale]);
+
+  const value = useMemo<DesignCtx>(
+    () => ({ tokens, scale, setScale }),
+    [tokens, scale]
+  );
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export const useDesign = () => useContext(Ctx).tokens;
+export const useDesignContext = () => useContext(Ctx);

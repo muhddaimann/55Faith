@@ -1,12 +1,10 @@
 import { Stack } from "expo-router";
-import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { DesignProvider } from "../contexts/designContext";
+import { ThemeProvider } from "../contexts/themeContext";
 import { AuthProvider } from "../contexts/authContext";
 import { TokenProvider } from "../contexts/tokenContext";
-import { PaperTheme } from "../constants/theme";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -37,13 +35,9 @@ export default function RootLayout() {
       <TokenProvider>
         <AuthProvider>
           <DesignProvider>
-            <PaperProvider theme={PaperTheme}>
-              <StatusBar
-                style="dark"
-                backgroundColor={PaperTheme.colors.background}
-              />
+            <ThemeProvider>
               <Stack screenOptions={{ headerShown: false }} />
-            </PaperProvider>
+            </ThemeProvider>
           </DesignProvider>
         </AuthProvider>
       </TokenProvider>
