@@ -11,7 +11,6 @@ export default function Welcome() {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Redirect to home after 1 second
     const timer = setTimeout(() => {
       router.replace('/(tabs)/home');
     }, 1000);

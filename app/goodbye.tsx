@@ -9,7 +9,6 @@ export default function Goodbye() {
   const tokens = useDesign();
 
   useEffect(() => {
-    // Redirect to login (index) after 1 second
     const timer = setTimeout(() => {
       router.replace('/');
     }, 1000);

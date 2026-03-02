@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { OverlayAlert } from "../components/OverlayAlert";
-import { OverlayConfirm } from "../components/OverlayConfirm";
-import { OverlayToast, ToastVariant } from "../components/OverlayToast";
-import { OverlayModal } from "../components/OverlayModal";
+import { OverlayAlert } from "../components/alert";
+import { OverlayConfirm } from "../components/confirm";
+import { OverlayToast, ToastVariant } from "../components/toast";
+import { OverlayModal } from "../components/modal";
 
 type AlertOptions = {
   title: string;

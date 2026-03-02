@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePathname, router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
+import { useLoader } from "../contexts/loaderContext";
 
 export function NavBar() {
   const theme = useTheme();
@@ -12,6 +13,7 @@ export function NavBar() {
   const tokens = useDesign();
   const pathname = usePathname();
   const { signOut } = useAuth();
+  const { showLoader, hideLoader } = useLoader();
   const isHome = pathname === "/home" || pathname === "/(tabs)/home";
   const isSettings = pathname === "/settings" || pathname === "/(tabs)/settings";
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -34,7 +36,10 @@ export function NavBar() {
 
   const handleActionButton = async () => {
     if (isHome) {
-      console.log("Plus pressed");
+      showLoader("Adding item...");
+      setTimeout(() => {
+        hideLoader();
+      }, 1000);
     } else {
       await signOut();
       router.replace("/goodbye");
