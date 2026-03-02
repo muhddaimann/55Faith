@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Modal, StyleSheet, TouchableWithoutFeedback, ScrollView } from 'react-native';
-import { Surface, useTheme } from 'react-native-paper';
+import { View, StyleSheet, TouchableWithoutFeedback, ScrollView, Animated } from 'react-native';
+import { Surface, useTheme, Portal } from 'react-native-paper';
 import { useDesign } from '../contexts/designContext';
 
 type Props = {
@@ -13,16 +13,29 @@ type Props = {
 export function OverlayModal({ visible, content, onDismiss, dismissable = true }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onDismiss}
-      statusBarTranslucent={true}
-    >
-      <View style={styles.fullscreen}>
+    <Portal>
+      <Animated.View style={[styles.fullscreen, { opacity }]}>
         <TouchableWithoutFeedback onPress={dismissable ? onDismiss : undefined}>
           <View style={styles.backdrop}>
             <TouchableWithoutFeedback>
@@ -44,8 +57,8 @@ export function OverlayModal({ visible, content, onDismiss, dismissable = true }
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
-      </View>
-    </Modal>
+      </Animated.View>
+    </Portal>
   );
 }
 

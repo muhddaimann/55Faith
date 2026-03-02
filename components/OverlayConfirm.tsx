@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Surface, Text, Button, useTheme } from 'react-native-paper';
+import { View, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native';
+import { Surface, Text, Button, useTheme, Portal } from 'react-native-paper';
 import { useDesign } from '../contexts/designContext';
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  isDestructive?: boolean;
 };
 
 export function OverlayConfirm({ 
@@ -20,20 +21,34 @@ export function OverlayConfirm({
   confirmText = 'Confirm', 
   cancelText = 'Cancel', 
   onConfirm, 
-  onCancel 
+  onCancel,
+  isDestructive = false
 }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onCancel}
-      statusBarTranslucent={true}
-    >
-      <View style={styles.fullscreen}>
+    <Portal>
+      <Animated.View style={[styles.fullscreen, { opacity }]}>
         <TouchableWithoutFeedback onPress={onCancel}>
           <View style={styles.backdrop}>
             <TouchableWithoutFeedback>
@@ -64,6 +79,7 @@ export function OverlayConfirm({
                     mode="text" 
                     onPress={onCancel} 
                     style={{ borderRadius: tokens.radii.md }}
+                    textColor={theme.colors.onSurfaceVariant}
                   >
                     {cancelText}
                   </Button>
@@ -71,6 +87,8 @@ export function OverlayConfirm({
                     mode="contained" 
                     onPress={onConfirm} 
                     style={{ borderRadius: tokens.radii.md }}
+                    buttonColor={isDestructive ? theme.colors.error : theme.colors.primary}
+                    textColor={isDestructive ? theme.colors.onError : theme.colors.onPrimary}
                   >
                     {confirmText}
                   </Button>
@@ -79,8 +97,8 @@ export function OverlayConfirm({
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
-      </View>
-    </Modal>
+      </Animated.View>
+    </Portal>
   );
 }
 

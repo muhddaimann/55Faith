@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { Surface, Text, Button, useTheme } from 'react-native-paper';
+import { View, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native';
+import { Surface, Text, Button, useTheme, Portal } from 'react-native-paper';
 import { useDesign } from '../contexts/designContext';
 
 type Props = {
@@ -14,16 +14,29 @@ type Props = {
 export function OverlayAlert({ visible, title, message, buttonText = 'OK', onClose }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
+  const opacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-      statusBarTranslucent={true}
-    >
-      <View style={styles.fullscreen}>
+    <Portal>
+      <Animated.View style={[styles.fullscreen, { opacity }]}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.backdrop}>
             <TouchableWithoutFeedback>
@@ -58,8 +71,8 @@ export function OverlayAlert({ visible, title, message, buttonText = 'OK', onClo
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
-      </View>
-    </Modal>
+      </Animated.View>
+    </Portal>
   );
 }
 

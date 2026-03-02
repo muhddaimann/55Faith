@@ -13,6 +13,7 @@ import {
   PlusJakartaSans_700Bold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { useEffect } from "react";
+import { View } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -38,7 +39,9 @@ export default function RootLayout() {
           <DesignProvider>
             <ThemeProvider>
               <OverlayProvider>
-                <Stack screenOptions={{ headerShown: false }} />
+                <View style={{ flex: 1 }}>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </View>
               </OverlayProvider>
             </ThemeProvider>
           </DesignProvider>

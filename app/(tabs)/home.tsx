@@ -1,80 +1,57 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme, Surface } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { useOverlay } from "../../contexts/overlayContext";
 
 export default function Home() {
+  const theme = useTheme();
   const tokens = useDesign();
   const { alert, confirm, toast, showModal, hideModal } = useOverlay();
 
   return (
     <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
       contentContainerStyle={{
-        padding: tokens.spacing.md,
+        padding: tokens.spacing.lg,
         gap: tokens.spacing.md,
+        paddingBottom: tokens.spacing["3xl"],
       }}
+      showsVerticalScrollIndicator={false}
     >
-      <Text variant="headlineMedium">Overlay Demo</Text>
-
-      <Button
-        mode="contained"
-        onPress={() =>
-          alert({
-            title: "Hello",
-            message: "This is a custom alert from OverlayContext",
-          })
-        }
+      <Text
+        variant="headlineMedium"
+        style={{ color: theme.colors.onBackground }}
       >
-        Show Alert
-      </Button>
+        Overlay Demo
+      </Text>
 
-      <Button
-        mode="contained-tonal"
-        onPress={() =>
-          confirm({
-            title: "Are you sure?",
-            message: "Do you want to proceed with this action?",
-            onConfirm: () => toast("Action confirmed!"),
-            onCancel: () => toast("Action cancelled"),
-          })
-        }
+      <Surface
+        elevation={1}
+        style={{
+          padding: tokens.spacing.lg,
+          borderRadius: tokens.radii.lg,
+          backgroundColor: theme.colors.surfaceVariant,
+          gap: tokens.spacing.sm,
+        }}
       >
-        Show Confirm
-      </Button>
+        <Text
+          variant="titleMedium"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          Interactive Components
+        </Text>
+        <Text
+          variant="bodySmall"
+          style={{
+            color: theme.colors.onSurfaceVariant,
+            opacity: 0.7,
+          }}
+        >
+          Test the custom modular overlay system below.
+        </Text>
+      </Surface>
 
-      <Button
-        mode="outlined"
-        onPress={() => toast("This is a simple toast message")}
-      >
-        Show Toast
-      </Button>
-
-      <Button
-        mode="outlined"
-        onPress={() =>
-          showModal({
-            content: (
-              <View>
-                <Text variant="headlineSmall">Custom Modal</Text>
-                <Text
-                  variant="bodyMedium"
-                  style={{ marginVertical: tokens.spacing.md }}
-                >
-                  This is a generic modal that can contain any React component.
-                </Text>
-                <Button mode="contained" onPress={hideModal}>
-                  Close
-                </Button>
-              </View>
-            ),
-          })
-        }
-      >
-        Show Modal
-      </Button>
-
-      <View style={{ height: 100 }} />
     </ScrollView>
   );
 }

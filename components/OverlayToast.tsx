@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Surface, Text, useTheme } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDesign } from '../contexts/designContext';
+import React, { useEffect, useRef } from "react";
+import { Animated, View, TouchableOpacity, StyleSheet } from "react-native";
+import { Surface, Text, useTheme, Icon, Portal } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDesign } from "../contexts/designContext";
+
+export type ToastVariant = "default" | "success" | "error" | "warning" | "info";
 
 type Props = {
   visible: boolean;
@@ -11,43 +13,88 @@ type Props = {
   onAction?: () => void;
   onDismiss: () => void;
   duration?: number;
+  variant?: ToastVariant;
+  icon?: string;
 };
 
-export function OverlayToast({ 
-  visible, 
-  message, 
-  actionLabel, 
-  onAction, 
-  onDismiss, 
-  duration = 3000 
+export function OverlayToast({
+  visible,
+  message,
+  actionLabel,
+  onAction,
+  onDismiss,
+  duration = 3000,
+  variant = "default",
+  icon,
 }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
   const insets = useSafeAreaInsets();
+
+  const translateY = useRef(new Animated.Value(-120)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
+  const variantConfig = {
+    default: {
+      bg: theme.colors.inverseSurface,
+      text: theme.colors.inverseOnSurface,
+      icon: icon ?? "information-outline",
+    },
+    success: {
+      bg: theme.colors.tertiaryContainer,
+      text: theme.colors.onTertiaryContainer,
+      icon: icon ?? "check-circle-outline",
+    },
+    error: {
+      bg: theme.colors.errorContainer,
+      text: theme.colors.onErrorContainer,
+      icon: icon ?? "alert-circle-outline",
+    },
+    warning: {
+      bg: theme.colors.secondaryContainer,
+      text: theme.colors.onSecondaryContainer,
+      icon: icon ?? "alert-outline",
+    },
+    info: {
+      bg: theme.colors.primaryContainer,
+      text: theme.colors.onPrimaryContainer,
+      icon: icon ?? "information-outline",
+    },
+  }[variant];
+
   useEffect(() => {
-    if (visible) {
-      Animated.timing(opacity, {
-        toValue: 1,
+    if (!visible) return;
+
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: insets.top + tokens.spacing.lg,
         duration: 300,
         useNativeDriver: true,
-      }).start();
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-      const timer = setTimeout(() => {
-        hide();
-      }, duration);
-
-      return () => clearTimeout(timer);
-    }
-  }, [visible]);
+    const timer = setTimeout(hide, duration);
+    return () => clearTimeout(timer);
+  }, [visible, insets.top]);
 
   const hide = () => {
-    Animated.timing(opacity, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -120,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       onDismiss();
     });
   };
@@ -55,55 +102,84 @@ export function OverlayToast({
   if (!visible) return null;
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      <Animated.View 
-        style={{ 
-          opacity, 
-          width: '100%', 
-          alignItems: 'center',
-          position: 'absolute',
-          bottom: insets.bottom + 100
-        }}
+    <Portal>
+      <View
+        pointerEvents="box-none"
+        style={[styles.container, { paddingHorizontal: tokens.spacing.lg }]}
       >
-        <Surface
-          style={[
-            styles.content,
-            { 
-              backgroundColor: theme.colors.inverseSurface,
-              borderRadius: tokens.radii.sm,
-              paddingVertical: tokens.spacing.sm,
-              paddingHorizontal: tokens.spacing.md,
-            }
-          ]}
-          elevation={4}
+        <Animated.View
+          style={{
+            opacity,
+            transform: [{ translateY }],
+            alignItems: "center",
+            width: '100%',
+          }}
         >
-          <Text style={{ color: theme.colors.inverseOnSurface, flex: 1 }}>
-            {message}
-          </Text>
-          {actionLabel && (
-            <TouchableOpacity onPress={() => { onAction?.(); hide(); }}>
-              <Text style={{ color: theme.colors.inversePrimary, fontWeight: 'bold', marginLeft: 16 }}>
-                {actionLabel.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Surface>
-      </Animated.View>
-    </View>
+          <Surface
+            elevation={4}
+            style={[
+              styles.content,
+              {
+                borderRadius: tokens.radii.lg,
+                backgroundColor: variantConfig.bg,
+                gap: tokens.spacing.sm,
+              }
+            ]}
+          >
+            <Icon
+              source={variantConfig.icon}
+              size={20}
+              color={variantConfig.text}
+            />
+
+            <Text
+              variant="bodyMedium"
+              style={{
+                flex: 1,
+                color: variantConfig.text,
+              }}
+            >
+              {message}
+            </Text>
+
+            {actionLabel && (
+              <TouchableOpacity
+                onPress={() => {
+                  onAction?.();
+                  hide();
+                }}
+              >
+                <Text
+                  variant="labelLarge"
+                  style={{
+                    color: variantConfig.text,
+                  }}
+                >
+                  {actionLabel.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </Surface>
+        </Animated.View>
+      </View>
+    </Portal>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
     zIndex: 9999,
-    paddingHorizontal: 20,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 48,
-    width: '100%',
-    maxWidth: 600,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    maxWidth: 640,
+    width: "100%",
   },
 });

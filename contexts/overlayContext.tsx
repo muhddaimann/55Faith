@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { OverlayAlert } from "../components/OverlayAlert";
 import { OverlayConfirm } from "../components/OverlayConfirm";
-import { OverlayToast } from "../components/OverlayToast";
+import { OverlayToast, ToastVariant } from "../components/OverlayToast";
 import { OverlayModal } from "../components/OverlayModal";
 
 type AlertOptions = {
@@ -18,6 +18,7 @@ type ConfirmOptions = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  isDestructive?: boolean;
 };
 
 type ToastOptions = {
@@ -25,6 +26,8 @@ type ToastOptions = {
   duration?: number;
   actionLabel?: string;
   onAction?: () => void;
+  variant?: ToastVariant;
+  icon?: string;
 };
 
 type ModalOptions = {
@@ -124,6 +127,7 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         cancelText={confirmConfig?.cancelText}
         onConfirm={handleConfirmAction}
         onCancel={handleConfirmCancel}
+        isDestructive={confirmConfig?.isDestructive}
       />
 
       <OverlayModal 
@@ -140,6 +144,8 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         onAction={toastConfig?.onAction}
         onDismiss={() => setToastVisible(false)}
         duration={toastConfig?.duration}
+        variant={toastConfig?.variant}
+        icon={toastConfig?.icon}
       />
 
     </OverlayContext.Provider>
