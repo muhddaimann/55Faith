@@ -1,16 +1,18 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
-import { Text, TextInput, Button, Card, useTheme } from "react-native-paper";
-import { router } from "expo-router";
+import { ScrollView, View } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
-import { KeyboardLayout } from "../../../components/keyboardLayout";
 import { useTabs } from "../../../contexts/tabContext";
 import Header from "../../../components/header";
+import MainCalendar from "../../../components/a/mainCalendar";
+import MainDescription from "../../../components/a/mainDesc";
+import { useAttendance } from "../../../hooks/useAttendance";
 
 export default function Main() {
   const theme = useTheme();
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
+  const { selectedDate, selectDate, record, records } = useAttendance();
 
   useEffect(() => {
     setHideTabBar(true);
@@ -18,71 +20,29 @@ export default function Main() {
   }, []);
 
   return (
-    <KeyboardLayout
-      scrollable
-      gap={tokens.spacing.md}
-      scrollViewProps={{
-        scrollEventThrottle: 16,
-        contentContainerStyle: {
-          flexGrow: 1,
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
           paddingHorizontal: tokens.spacing.lg,
           paddingBottom: tokens.spacing["3xl"],
-        },
-      }}
-    >
-      <Header title="Main Content Form" subtitle="Fill Form" showBack />
-
-      <Card
-        mode="elevated"
-        style={{
-          backgroundColor: theme.colors.surface,
-          borderRadius: tokens.radii.xl,
-        }}
-        contentStyle={{
-          padding: tokens.spacing.xl,
           gap: tokens.spacing.lg,
         }}
       >
-        <Text
-          variant="bodyMedium"
-          style={{ color: theme.colors.onSurfaceVariant }}
-        >
-          Please fill in all the details below. This is a demo of a very long
-          form.
-        </Text>
+        <Header
+          title="Attendance"
+          subtitle="Track your shift & working status"
+          showBack
+        />
 
-        <View style={{ gap: tokens.spacing.md }}>
-          {[
-            "First Name",
-            "Last Name",
-            "Email Address",
-            "Phone Number",
-            "Address Line 1",
-            "Address Line 2",
-            "City",
-            "State",
-            "Zip Code",
-            "Country",
-            "Company",
-            "Job Title",
-            "Department",
-          ].map((field, index) => (
-            <TextInput key={index} label={field} mode="outlined" />
-          ))}
-        </View>
+        <MainCalendar
+          selectedDate={selectedDate}
+          records={records}
+          onSelect={selectDate}
+        />
 
-        <Button
-          mode="contained"
-          onPress={() => router.back()}
-          style={{
-            borderRadius: tokens.radii.lg,
-            marginTop: tokens.spacing.sm,
-          }}
-          contentStyle={{ paddingVertical: tokens.spacing.sm }}
-        >
-          Submit Form
-        </Button>
-      </Card>
-    </KeyboardLayout>
+        <MainDescription record={record} />
+      </ScrollView>
+    </View>
   );
 }

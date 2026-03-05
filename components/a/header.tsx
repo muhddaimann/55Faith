@@ -21,11 +21,48 @@ export default function Header() {
     >
       <View
         style={{
+          flex: 1,
+          gap: 2,
+        }}
+      >
+        <Text variant= "titleMedium" style={{ color: colors.primary }}>
+          F A I T H
+        </Text>
+
+        <Text variant="titleMedium" style={{ fontWeight: "600" }}>
+          Good Morning, Adam
+        </Text>
+
+        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+          Software Engineer
+        </Text>
+      </View>
+
+      <View
+        style={{
           flexDirection: "row",
           alignItems: "center",
           gap: tokens.spacing.md,
         }}
       >
+        <Pressable
+          style={({ pressed }) => ({
+            width: 40,
+            height: 40,
+            borderRadius: tokens.radii.full,
+            backgroundColor: colors.surfaceVariant,
+            alignItems: "center",
+            justifyContent: "center",
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
+        >
+          <MaterialCommunityIcons
+            name="bell-outline"
+            size={22}
+            color={colors.onSurfaceVariant}
+          />
+        </Pressable>
+
         <View
           style={{
             width: 48,
@@ -36,43 +73,17 @@ export default function Header() {
             justifyContent: "center",
           }}
         >
-          <MaterialCommunityIcons
-            name="account"
-            size={24}
-            color={colors.onPrimary}
-          />
-        </View>
-
-        <View>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            F A I T H
-          </Text>
-          <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-            Good Morning, Adam
-          </Text>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            Software Engineer
+          <Text
+            variant="titleMedium"
+            style={{
+              color: colors.onPrimary,
+              fontWeight: "700",
+            }}
+          >
+            AF
           </Text>
         </View>
       </View>
-
-      <Pressable
-        style={({ pressed }) => ({
-          width: 40,
-          height: 40,
-          borderRadius: tokens.radii.full,
-          backgroundColor: colors.surfaceVariant,
-          alignItems: "center",
-          justifyContent: "center",
-          transform: [{ scale: pressed ? 0.95 : 1 }],
-        })}
-      >
-        <MaterialCommunityIcons
-          name="bell-outline"
-          size={22}
-          color={colors.onSurfaceVariant}
-        />
-      </Pressable>
     </View>
   );
 }

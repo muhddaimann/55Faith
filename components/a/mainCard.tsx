@@ -1,12 +1,34 @@
 import React from "react";
-import { View } from "react-native";
+import { View, Pressable } from "react-native";
 import { Card, Text, useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useMain } from "../../hooks/useMain";
 
 export default function MainCard() {
   const { colors } = useTheme();
   const tokens = useDesign();
+  const router = useRouter();
+
+  const {
+    dateLabel,
+    roleLabel,
+    current,
+    holiday,
+    start,
+    end,
+    toggleStatus,
+    toggleStaffType,
+    toggleHoliday,
+    staffType,
+    isPublicHoliday,
+    showStatus,
+    showWorkingHours,
+    message,
+  } = useMain();
+
+  const canNavigate = staffType === "operation";
 
   return (
     <Card
@@ -18,60 +40,249 @@ export default function MainCard() {
       }}
       contentStyle={{
         padding: tokens.spacing.lg,
-        gap: tokens.spacing.lg,
+        gap: tokens.spacing.md,
       }}
     >
-      <View style={{ gap: tokens.spacing.xs }}>
-        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-          Monday, 18 March 2026
-        </Text>
-        <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-          Management Level: Senior Executive
-        </Text>
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: tokens.spacing.sm,
-        }}
-      >
-        <MaterialCommunityIcons
-          name="check-circle"
-          size={20}
-          color={colors.primary}
-        />
-        <Text variant="titleSmall" style={{ fontWeight: "600" }}>
-          Status: On Duty
-        </Text>
-      </View>
-
       <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          marginTop: tokens.spacing.sm,
+          alignItems: "center",
         }}
       >
-        <View style={{ gap: tokens.spacing.xs }}>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            Start Shift
+        <View style={{ gap: 2 }}>
+          <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+            {dateLabel}
           </Text>
-          <Text variant="titleSmall" style={{ fontWeight: "600" }}>
-            09:00 AM
+
+          <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+            {roleLabel}
           </Text>
         </View>
 
-        <View style={{ gap: tokens.spacing.xs }}>
-          <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-            End Shift
-          </Text>
-          <Text variant="titleSmall" style={{ fontWeight: "600" }}>
-            06:00 PM
-          </Text>
+        <View style={{ flexDirection: "row", gap: tokens.spacing.sm }}>
+          <Pressable
+            onPress={toggleStaffType}
+            style={({ pressed }) => ({
+              width: 40,
+              height: 40,
+              borderRadius: tokens.radii.full,
+              backgroundColor: colors.surfaceVariant,
+              alignItems: "center",
+              justifyContent: "center",
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+            })}
+          >
+            <MaterialCommunityIcons
+              name={
+                staffType === "operation"
+                  ? "account-hard-hat"
+                  : "briefcase-account"
+              }
+              size={22}
+              color={colors.primary}
+            />
+          </Pressable>
+
+          <Pressable
+            onPress={toggleHoliday}
+            style={({ pressed }) => ({
+              width: 40,
+              height: 40,
+              borderRadius: tokens.radii.full,
+              backgroundColor: isPublicHoliday
+                ? colors.tertiaryContainer
+                : colors.surfaceVariant,
+              alignItems: "center",
+              justifyContent: "center",
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+            })}
+          >
+            <MaterialCommunityIcons
+              name="calendar-star"
+              size={22}
+              color={
+                isPublicHoliday ? colors.onTertiaryContainer : colors.primary
+              }
+            />
+          </Pressable>
+
+          <Pressable
+            disabled={!canNavigate}
+            onPress={() => canNavigate && router.push("a/main")}
+            style={({ pressed }) => ({
+              width: 40,
+              height: 40,
+              borderRadius: tokens.radii.full,
+              backgroundColor: colors.surfaceVariant,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: canNavigate ? 1 : 0.4,
+              transform: [{ scale: pressed && canNavigate ? 0.95 : 1 }],
+            })}
+          >
+            <MaterialCommunityIcons
+              name="calendar-outline"
+              size={24}
+              color={colors.primary}
+            />
+          </Pressable>
         </View>
       </View>
+
+      {isPublicHoliday && holiday && (
+        <View
+          style={{
+            backgroundColor: holiday.bg,
+            borderRadius: tokens.radii.lg,
+            paddingVertical: tokens.spacing.sm,
+            paddingHorizontal: tokens.spacing.md,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: tokens.spacing.sm,
+          }}
+        >
+          <MaterialCommunityIcons
+            name={holiday.icon as any}
+            size={18}
+            color={holiday.color}
+          />
+          <Text
+            variant="bodyMedium"
+            style={{
+              fontWeight: "600",
+              color: holiday.color,
+            }}
+          >
+            {holiday.label} · {holiday.name}
+          </Text>
+        </View>
+      )}
+
+      {showStatus &&
+        (staffType === "operation" ? (
+          <Pressable
+            onPress={toggleStatus}
+            style={({ pressed }) => ({
+              backgroundColor: current.bg,
+              borderRadius: tokens.radii.lg,
+              paddingVertical: tokens.spacing.sm,
+              paddingHorizontal: tokens.spacing.md,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: tokens.spacing.sm,
+              opacity: pressed ? 0.9 : 1,
+            })}
+          >
+            <MaterialCommunityIcons
+              name={current.icon as any}
+              size={18}
+              color={current.color}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{
+                fontWeight: "600",
+                color: current.color,
+              }}
+            >
+              {current.label}
+            </Text>
+          </Pressable>
+        ) : (
+          <View
+            style={{
+              backgroundColor: current.bg,
+              borderRadius: tokens.radii.lg,
+              paddingVertical: tokens.spacing.sm,
+              paddingHorizontal: tokens.spacing.md,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: tokens.spacing.sm,
+            }}
+          >
+            <MaterialCommunityIcons
+              name={current.icon as any}
+              size={18}
+              color={current.color}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{
+                fontWeight: "600",
+                color: current.color,
+              }}
+            >
+              {current.label}
+            </Text>
+          </View>
+        ))}
+      {showWorkingHours ? (
+        <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.surfaceVariant,
+              borderRadius: tokens.radii.lg,
+              paddingVertical: tokens.spacing.sm,
+              paddingHorizontal: tokens.spacing.md,
+              gap: 2,
+            }}
+          >
+            <Text
+              variant="bodySmall"
+              style={{ color: colors.onSurfaceVariant }}
+            >
+              Start
+            </Text>
+            <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+              {start}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: colors.surfaceVariant,
+              borderRadius: tokens.radii.lg,
+              paddingVertical: tokens.spacing.sm,
+              paddingHorizontal: tokens.spacing.md,
+              gap: 2,
+            }}
+          >
+            <Text
+              variant="bodySmall"
+              style={{ color: colors.onSurfaceVariant }}
+            >
+              End
+            </Text>
+            <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+              {end}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        message !== "" && (
+          <View
+            style={{
+              backgroundColor: colors.surfaceVariant,
+              borderRadius: tokens.radii.lg,
+              paddingVertical: tokens.spacing.md,
+              paddingHorizontal: tokens.spacing.md,
+            }}
+          >
+            <Text
+              variant="bodyMedium"
+              style={{
+                color: colors.onSurfaceVariant,
+                textAlign: "center",
+              }}
+            >
+              {message}
+            </Text>
+          </View>
+        )
+      )}
     </Card>
   );
 }

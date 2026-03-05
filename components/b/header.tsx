@@ -2,7 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import { useTheme, Text, Button } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function SettingsHeader() {
   const { colors } = useTheme();
@@ -29,11 +28,15 @@ export default function SettingsHeader() {
           justifyContent: "center",
         }}
       >
-        <MaterialCommunityIcons
-          name="account"
-          size={34}
-          color={colors.onPrimary}
-        />
+        <Text
+          variant="titleMedium"
+          style={{
+            color: colors.onPrimary,
+            fontWeight: "700",
+          }}
+        >
+          AF
+        </Text>
       </View>
 
       <View

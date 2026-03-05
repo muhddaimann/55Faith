@@ -43,12 +43,59 @@ export default function Home() {
         style={{ flex: 1, backgroundColor: theme.colors.background }}
         contentContainerStyle={{
           gap: tokens.spacing.md,
-          paddingBottom: tokens.spacing["3xl"],
+          paddingBottom: tokens.spacing["3xl"] * 2,
         }}
         showsVerticalScrollIndicator={false}
       >
         <Header />
         <MainCard />
+        <SectionHeader
+          icon={
+            <MaterialCommunityIcons
+              name="calendar-account-outline"
+              size={26}
+              color={theme.colors.primary}
+            />
+          }
+          head="Leave Application"
+          subHeader="Apply & track your leave status"
+          rightSlot={
+            <Button compact mode="text" onPress={() => router.push("/a/leave")}>
+              Apply Now
+            </Button>
+          }
+        />
+
+        <TwoRow
+          left={{
+            amount: 1,
+            label: "Pending Leave",
+            icon: (
+              <MaterialCommunityIcons
+                name="timer-sand"
+                size={20}
+                color={theme.colors.onPrimary}
+              />
+            ),
+            bgColor: theme.colors.primary,
+            textColor: theme.colors.onPrimary,
+            labelColor: theme.colors.onPrimary,
+          }}
+          right={{
+            amount: 8,
+            label: "Leave History",
+            icon: (
+              <MaterialCommunityIcons
+                name="calendar-check-outline"
+                size={20}
+                color={theme.colors.onPrimaryContainer}
+              />
+            ),
+            bgColor: theme.colors.primaryContainer,
+            textColor: theme.colors.onPrimaryContainer,
+            labelColor: theme.colors.onPrimaryContainer,
+          }}
+        />
         <SectionHeader
           icon={
             <MaterialCommunityIcons
