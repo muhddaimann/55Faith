@@ -2,10 +2,12 @@ import React from "react";
 import { View } from "react-native";
 import { useTheme, Text, Button } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
+import { useRouter } from "expo-router";
 
 export default function SettingsHeader() {
   const { colors } = useTheme();
   const tokens = useDesign();
+  const router = useRouter();
 
   return (
     <View
@@ -65,11 +67,11 @@ export default function SettingsHeader() {
           Software Engineer · IT Department
         </Text>
       </View>
-
       <Button
         mode="outlined"
         icon="account-edit-outline"
         compact
+        onPress={() => router.push("b/update")}
         style={{
           borderRadius: tokens.radii.full,
         }}

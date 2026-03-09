@@ -7,6 +7,7 @@ import Header from "../../../components/header";
 import MainCalendar from "../../../components/a/mainCalendar";
 import MainDescription from "../../../components/a/mainDesc";
 import { useAttendance } from "../../../hooks/useAttendance";
+import ReminderCard from "../../../components/a/reminderCard";
 
 export default function Main() {
   const theme = useTheme();
@@ -42,6 +43,7 @@ export default function Main() {
         />
 
         <MainDescription record={record} />
+        <ReminderCard />
       </ScrollView>
     </View>
   );

@@ -64,6 +64,10 @@ export default function MainDescription({ record }: Props) {
     month: "short",
   });
 
+  const worked =
+    record.status === "on_duty" ||
+    (record.status === "public_holiday" && record.checkIn);
+
   return (
     <Card
       mode="elevated"
@@ -109,46 +113,69 @@ export default function MainDescription({ record }: Props) {
           </View>
         </View>
 
-        {record.status === "on_duty" && (
-          <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: colors.surfaceVariant,
-                padding: tokens.spacing.md,
-                borderRadius: tokens.radii.lg,
-                gap: 2,
-              }}
-            >
-              <Text
-                variant="labelSmall"
-                style={{ color: colors.onSurfaceVariant }}
+        {worked && (
+          <View style={{ gap: tokens.spacing.md }}>
+            {(record.shiftStart || record.shiftEnd) && (
+              <View
+                style={{
+                  backgroundColor: colors.surfaceVariant,
+                  padding: tokens.spacing.md,
+                  borderRadius: tokens.radii.lg,
+                  gap: 2,
+                }}
               >
-                Check In
-              </Text>
-              <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                {record.start || "--:--"}
-              </Text>
-            </View>
+                <Text
+                  variant="labelSmall"
+                  style={{ color: colors.onSurfaceVariant }}
+                >
+                  Shift
+                </Text>
+                <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                  {record.shiftStart || "--:--"} - {record.shiftEnd || "--:--"}
+                </Text>
+              </View>
+            )}
 
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: colors.surfaceVariant,
-                padding: tokens.spacing.md,
-                borderRadius: tokens.radii.lg,
-                gap: 2,
-              }}
-            >
-              <Text
-                variant="labelSmall"
-                style={{ color: colors.onSurfaceVariant }}
+            <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.surfaceVariant,
+                  padding: tokens.spacing.md,
+                  borderRadius: tokens.radii.lg,
+                  gap: 2,
+                }}
               >
-                Check Out
-              </Text>
-              <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                {record.end || "--:--"}
-              </Text>
+                <Text
+                  variant="labelSmall"
+                  style={{ color: colors.onSurfaceVariant }}
+                >
+                  Check In
+                </Text>
+                <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                  {record.checkIn || "--:--"}
+                </Text>
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.surfaceVariant,
+                  padding: tokens.spacing.md,
+                  borderRadius: tokens.radii.lg,
+                  gap: 2,
+                }}
+              >
+                <Text
+                  variant="labelSmall"
+                  style={{ color: colors.onSurfaceVariant }}
+                >
+                  Check Out
+                </Text>
+                <Text variant="titleMedium" style={{ fontWeight: "700" }}>
+                  {record.checkOut || "--:--"}
+                </Text>
+              </View>
             </View>
           </View>
         )}

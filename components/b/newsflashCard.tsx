@@ -34,7 +34,7 @@ export default function NewsFlashCarousel() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: tokens.spacing.xs,
+          paddingHorizontal: tokens.spacing.lg,
         }}
       >
         {data.map((item, index) => (

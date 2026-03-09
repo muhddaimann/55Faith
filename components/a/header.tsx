@@ -13,7 +13,6 @@ export default function Header() {
       style={{
         backgroundColor: colors.background,
         paddingTop: tokens.spacing.sm,
-        paddingHorizontal: tokens.spacing.lg,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -25,7 +24,7 @@ export default function Header() {
           gap: 2,
         }}
       >
-        <Text variant= "titleMedium" style={{ color: colors.primary }}>
+        <Text variant="titleMedium" style={{ color: colors.primary }}>
           F A I T H
         </Text>
 

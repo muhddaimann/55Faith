@@ -43,6 +43,7 @@ export default function Home() {
         style={{ flex: 1, backgroundColor: theme.colors.background }}
         contentContainerStyle={{
           gap: tokens.spacing.md,
+          paddingHorizontal: tokens.spacing.lg,
           paddingBottom: tokens.spacing["3xl"] * 2,
         }}
         showsVerticalScrollIndicator={false}

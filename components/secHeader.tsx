@@ -26,7 +26,6 @@ export default function SectionHeader({
         alignItems: "center",
         justifyContent: "space-between",
         gap: tokens.spacing.md,
-        marginHorizontal: tokens.spacing.lg,
       }}
     >
       <View

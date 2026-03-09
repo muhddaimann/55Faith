@@ -26,6 +26,7 @@ export default function TwoRow({ left, right }: TwoRowProps) {
       style={{
         flexDirection: "row",
         gap: tokens.spacing.md,
+        marginHorizontal: tokens.spacing.lg,
       }}
     >
       {[left, right].map((item, idx) => (

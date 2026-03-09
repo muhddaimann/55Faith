@@ -11,10 +11,10 @@ const ThemeCtx = createContext<Ctx>({ isDark: false, toggle: () => {} });
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDark, setIsDark] = useState(false);
   const insets = useSafeAreaInsets();
-  
+
   const value = useMemo<Ctx>(
     () => ({ isDark, toggle: () => setIsDark((v) => !v) }),
-    [isDark]
+    [isDark],
   );
 
   const theme = isDark ? darkTheme : lightTheme;
@@ -22,11 +22,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeCtx.Provider value={value}>
       <PaperProvider theme={theme}>
-        <StatusBar
-          style={isDark ? "light" : "dark"}
-          backgroundColor={theme.colors.background}
-        />
-        <View style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top }}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.background,
+            paddingTop: insets.top,
+          }}
+        >
           {children}
         </View>
       </PaperProvider>

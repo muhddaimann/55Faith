@@ -34,7 +34,6 @@ export default function MainCard() {
     <Card
       mode="elevated"
       style={{
-        marginHorizontal: tokens.spacing.lg,
         borderRadius: tokens.radii.xl,
         backgroundColor: colors.surface,
       }}
