@@ -1,6 +1,33 @@
 import React, { createContext, useContext } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
+const TOKEN_KEY = 'user_token';
+
+export const getToken = async () => {
+  try {
+    return await SecureStore.getItemAsync(TOKEN_KEY);
+  } catch (e) {
+    console.error('Failed to get token', e);
+    return null;
+  }
+};
+
+export const setStoredToken = async (token: string) => {
+  try {
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
+  } catch (e) {
+    console.error('Failed to save token', e);
+  }
+};
+
+export const clearStoredToken = async () => {
+  try {
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+  } catch (e) {
+    console.error('Failed to delete token', e);
+  }
+};
+
 type TokenContextType = {
   getToken: () => Promise<string | null>;
   saveToken: (token: string) => Promise<void>;
@@ -9,8 +36,6 @@ type TokenContextType = {
 
 const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'user_token';
-
 export const useToken = () => {
   const context = useContext(TokenContext);
   if (!context) throw new Error('useToken must be used within a TokenProvider');
@@ -18,33 +43,8 @@ export const useToken = () => {
 };
 
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
-  const getToken = async () => {
-    try {
-      return await SecureStore.getItemAsync(TOKEN_KEY);
-    } catch (e) {
-      console.error('Failed to get token', e);
-      return null;
-    }
-  };
-
-  const saveToken = async (token: string) => {
-    try {
-      await SecureStore.setItemAsync(TOKEN_KEY, token);
-    } catch (e) {
-      console.error('Failed to save token', e);
-    }
-  };
-
-  const deleteToken = async () => {
-    try {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-    } catch (e) {
-      console.error('Failed to delete token', e);
-    }
-  };
-
   return (
-    <TokenContext.Provider value={{ getToken, saveToken, deleteToken }}>
+    <TokenContext.Provider value={{ getToken, saveToken: setStoredToken, deleteToken: clearStoredToken }}>
       {children}
     </TokenContext.Provider>
   );

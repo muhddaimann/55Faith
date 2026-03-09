@@ -36,9 +36,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <TokenProvider>
-        <AuthProvider>
-          <DesignProvider>
-            <ThemeProvider>
+        <DesignProvider>
+          <ThemeProvider>
+            <AuthProvider>
               <LoaderProvider>
                 <OverlayProvider>
                   <View style={{ flex: 1 }}>
@@ -46,9 +46,9 @@ export default function RootLayout() {
                   </View>
                 </OverlayProvider>
               </LoaderProvider>
-            </ThemeProvider>
-          </DesignProvider>
-        </AuthProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </DesignProvider>
       </TokenProvider>
     </SafeAreaProvider>
   );

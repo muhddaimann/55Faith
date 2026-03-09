@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { Text, TextInput, Button, Card, HelperText, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, Card, useTheme } from 'react-native-paper';
 import { router } from 'expo-router';
 import { useDesign } from '../contexts/designContext';
 import { useAuth } from '../contexts/authContext';
 import { KeyboardLayout } from '../components/keyboardLayout';
+import { OverlayLoader } from '../components/loader';
+import { OverlayToast } from '../components/toast';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
-
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const theme = useTheme();
   const tokens = useDesign();
   const { signIn, user, isLoading } = useAuth();
@@ -22,22 +25,23 @@ export default function Login() {
   }, [user, isLoading]);
 
   const handleLogin = async () => {
-    const success = await signIn(username.trim(), password);
-    if (success) {
-      setError(false);
-      router.replace('/welcome');
-    } else {
-      setError(true);
+    setIsSigningIn(true);
+    setErrorMsg(null);
+    setShowToast(false);
+    
+    try {
+      const response = await signIn(username.trim(), password);
+      if (response.status === 'success') {
+        router.replace('/welcome');
+      } else {
+        const msg = response.message || 'Invalid username or password';
+        setErrorMsg(msg);
+        setShowToast(true);
+      }
+    } finally {
+      setIsSigningIn(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
 
   return (
     <KeyboardLayout
@@ -46,6 +50,15 @@ export default function Login() {
         paddingHorizontal: tokens.spacing.xl,
       }}
     >
+      <OverlayLoader visible={isLoading || isSigningIn} message={isSigningIn ? "Signing in..." : undefined} />
+      
+      <OverlayToast 
+        visible={showToast}
+        message={errorMsg || ''}
+        variant="error"
+        onDismiss={() => setShowToast(false)}
+      />
+
       <Card
         mode="elevated"
         style={{
@@ -85,7 +98,7 @@ export default function Login() {
           autoCapitalize="none"
           autoCorrect={false}
           left={<TextInput.Icon icon="account-outline" />}
-          error={error}
+          error={showToast}
           returnKeyType="next"
         />
 
@@ -97,18 +110,10 @@ export default function Login() {
           secureTextEntry
           style={{ marginTop: tokens.spacing.md }}
           left={<TextInput.Icon icon="lock-outline" />}
-          error={error}
+          error={showToast}
           returnKeyType="done"
           onSubmitEditing={handleLogin}
         />
-
-        <HelperText
-          type="error"
-          visible={error}
-          style={{ marginTop: tokens.spacing.xs }}
-        >
-          Invalid username or password
-        </HelperText>
 
         <Button
           mode="contained"
@@ -116,9 +121,11 @@ export default function Login() {
           style={{
             borderRadius: tokens.radii.lg,
             paddingVertical: 4,
+            marginTop: tokens.spacing.xl,
           }}
           contentStyle={{ paddingVertical: 6 }}
-          disabled={!username || !password}
+          disabled={!username || !password || isSigningIn}
+          loading={isSigningIn}
         >
           Login
         </Button>

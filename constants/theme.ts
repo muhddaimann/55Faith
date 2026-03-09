@@ -7,7 +7,7 @@ import {
 
 const make = (
   family: string,
-  weight: "400" | "700",
+  weight: "400" | "600" | "700",
   fontSize: number,
   lineHeight: number,
   letterSpacing = 0,

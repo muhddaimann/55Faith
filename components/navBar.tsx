@@ -78,8 +78,7 @@ export function NavBar() {
         ),
       });
     } else {
-      await signOut();
-      router.replace("/goodbye");
+      signOut();
     }
   };
 
