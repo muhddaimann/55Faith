@@ -3,30 +3,24 @@ import { ScrollView, View, Dimensions } from "react-native";
 import { Card, Text, useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useBroadcastStore } from "../../contexts/api/broadcastStore";
 
 const { width } = Dimensions.get("window");
 
 export default function NewsFlashCarousel() {
   const { colors } = useTheme();
   const tokens = useDesign();
+  const { broadcasts } = useBroadcastStore();
 
-  const data = [
-    {
-      title: "System Maintenance",
-      description: "Scheduled maintenance tonight at 11:00 PM.",
-      icon: "tools",
-    },
-    {
-      title: "HR Policy Update",
-      description: "New leave policy effective next month.",
-      icon: "file-document-outline",
-    },
-    {
-      title: "Office Closure",
-      description: "Office closed this Friday for maintenance.",
-      icon: "office-building-outline",
-    },
-  ];
+  if (broadcasts.length === 0) {
+    return (
+      <View style={{ padding: tokens.spacing.lg, alignItems: 'center' }}>
+        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+          No announcements at the moment.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View>
@@ -37,13 +31,12 @@ export default function NewsFlashCarousel() {
           paddingHorizontal: tokens.spacing.xs,
         }}
       >
-        {data.map((item, index) => (
+        {broadcasts.map((item, index) => (
           <View
-            key={index}
+            key={item.ID}
             style={{
               width: width * 0.75,
-              marginRight: index !== data.length - 1 ? tokens.spacing.md : 0,
-              paddingBottom: tokens.spacing.xs,
+              marginRight: index !== broadcasts.length - 1 ? tokens.spacing.md : 0,
             }}
           >
             <Card
@@ -68,21 +61,22 @@ export default function NewsFlashCarousel() {
                 }}
               >
                 <MaterialCommunityIcons
-                  name={item.icon as any}
+                  name={item.BroadcastPriority === "High" ? "alert-circle" : "bullhorn-outline"}
                   size={20}
                   color={colors.primary}
                 />
               </View>
 
               <View style={{ gap: tokens.spacing.xs }}>
-                <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-                  {item.title}
+                <Text variant="titleMedium" style={{ fontWeight: "600" }} numberOfLines={1}>
+                  {item.NewsName}
                 </Text>
                 <Text
                   variant="bodySmall"
                   style={{ color: colors.onSurfaceVariant }}
+                  numberOfLines={2}
                 >
-                  {item.description}
+                  {item.Description}
                 </Text>
               </View>
             </Card>

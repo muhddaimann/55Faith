@@ -3,6 +3,7 @@ import {
   ScrollView,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  RefreshControl,
 } from "react-native";
 import { useTheme, Button } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
@@ -13,8 +14,9 @@ import MainCard from "../../../components/a/mainCard";
 import SectionHeader from "../../../components/secHeader";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import NewsFlashCarousel from "../../../components/a/newsflashCard";
+import NewsFlashCarousel from "../../../components/a/newsflashCarousel";
 import TwoRow from "../../../components/a/twoRow";
+import { useHome } from "../../../hooks/useHome";
 
 export default function Home() {
   const theme = useTheme();
@@ -23,6 +25,15 @@ export default function Home() {
   const { onScroll } = useTabs();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const {
+    pendingLeavesCount,
+    annualLeaveLeft,
+    loading,
+    activeBookingsCount,
+    bookingHistoryCount,
+    refreshHomeData,
+  } = useHome();
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
@@ -47,6 +58,9 @@ export default function Home() {
           paddingBottom: tokens.spacing["3xl"] * 2,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refreshHomeData} />
+        }
       >
         <Header />
         <MainCard />
@@ -69,7 +83,7 @@ export default function Home() {
 
         <TwoRow
           left={{
-            amount: 1,
+            amount: pendingLeavesCount,
             label: "Pending Leave",
             icon: (
               <MaterialCommunityIcons
@@ -83,11 +97,11 @@ export default function Home() {
             labelColor: theme.colors.onPrimary,
           }}
           right={{
-            amount: 8,
-            label: "Leave History",
+            amount: annualLeaveLeft,
+            label: "AL Balance",
             icon: (
               <MaterialCommunityIcons
-                name="calendar-check-outline"
+                name="calendar-account-outline"
                 size={20}
                 color={theme.colors.onPrimaryContainer}
               />
@@ -97,6 +111,7 @@ export default function Home() {
             labelColor: theme.colors.onPrimaryContainer,
           }}
         />
+
         <SectionHeader
           icon={
             <MaterialCommunityIcons
@@ -137,7 +152,7 @@ export default function Home() {
         />
         <TwoRow
           left={{
-            amount: 2,
+            amount: activeBookingsCount,
             label: "Active Booking",
             icon: (
               <MaterialCommunityIcons
@@ -151,7 +166,7 @@ export default function Home() {
             labelColor: theme.colors.onPrimary,
           }}
           right={{
-            amount: 12,
+            amount: bookingHistoryCount,
             label: "Booking History",
             icon: (
               <MaterialCommunityIcons
