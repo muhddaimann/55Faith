@@ -3,10 +3,12 @@ import { View, Pressable } from "react-native";
 import { useTheme, Text } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useHome } from "../../hooks/useHome";
 
 export default function Header() {
   const { colors } = useTheme();
   const tokens = useDesign();
+  const { greeting, nickName, initials, designation } = useHome();
 
   return (
     <View
@@ -29,11 +31,11 @@ export default function Header() {
         </Text>
 
         <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-          Good Morning, Adam
+          {greeting}, {nickName}
         </Text>
 
         <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
-          Software Engineer
+          {designation}
         </Text>
       </View>
 
@@ -79,7 +81,7 @@ export default function Header() {
               fontWeight: "700",
             }}
           >
-            AF
+            {initials}
           </Text>
         </View>
       </View>

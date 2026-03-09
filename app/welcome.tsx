@@ -3,17 +3,16 @@ import { View } from "react-native";
 import { Text, useTheme, ActivityIndicator } from "react-native-paper";
 import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
-import { useAuth } from "../contexts/authContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function Welcome() {
   const theme = useTheme();
   const tokens = useDesign();
-  const { user } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/(tabs)/a");
-    }, 1000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -24,26 +23,49 @@ export default function Welcome() {
         backgroundColor: theme.colors.background,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: tokens.spacing.xl,
-        gap: tokens.spacing.lg,
+        paddingHorizontal: tokens.spacing["2xl"],
+        gap: tokens.spacing.xl,
       }}
     >
-      <Text
-        variant="headlineMedium"
-        style={{ fontWeight: "700", textAlign: "center" }}
-      >
-        Welcome Back
-      </Text>
-
-      <Text
-        variant="bodyMedium"
+      <View
         style={{
-          textAlign: "center",
-          color: theme.colors.onSurfaceVariant,
+          height: 80,
+          width: 80,
+          borderRadius: 40,
+          backgroundColor: theme.colors.primaryContainer,
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        Preparing your dashboard{user ? `, ${user}` : ""}...
-      </Text>
+        <MaterialCommunityIcons
+          name="hand-wave-outline"
+          size={40}
+          color={theme.colors.primary}
+        />
+      </View>
+
+      <View style={{ alignItems: "center", gap: tokens.spacing.sm }}>
+        <Text
+          variant="headlineSmall"
+          style={{
+            fontWeight: "700",
+            textAlign: "center",
+            letterSpacing: 0.3,
+          }}
+        >
+          Welcome Back
+        </Text>
+
+        <Text
+          variant="bodyMedium"
+          style={{
+            textAlign: "center",
+            color: theme.colors.onSurfaceVariant,
+          }}
+        >
+          Preparing your dashboard
+        </Text>
+      </View>
 
       <ActivityIndicator size="small" color={theme.colors.primary} />
     </View>

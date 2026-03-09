@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import { Text, useTheme, ActivityIndicator } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function Goodbye() {
   const theme = useTheme();
@@ -11,7 +12,7 @@ export default function Goodbye() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/");
-    }, 1000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -22,28 +23,49 @@ export default function Goodbye() {
         backgroundColor: theme.colors.background,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: tokens.spacing.xl,
-        gap: tokens.spacing.lg,
+        paddingHorizontal: tokens.spacing["2xl"],
+        gap: tokens.spacing.xl,
       }}
     >
-      <Text
-        variant="headlineMedium"
-        style={{ fontWeight: "700", textAlign: "center" }}
-      >
-        Goodbye
-      </Text>
-
-      <Text
-        variant="bodyMedium"
+      <View
         style={{
-          textAlign: "center",
-          color: theme.colors.onSurfaceVariant,
+          height: 80,
+          width: 80,
+          borderRadius: 40,
+          backgroundColor: theme.colors.errorContainer,
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        You have successfully logged out.
-      </Text>
+        <MaterialCommunityIcons
+          name="logout"
+          size={40}
+          color={theme.colors.error}
+        />
+      </View>
 
-      <ActivityIndicator size="small" color={theme.colors.primary} />
+      <View style={{ alignItems: "center", gap: tokens.spacing.sm }}>
+        <Text
+          variant="headlineSmall"
+          style={{
+            fontWeight: "700",
+            textAlign: "center",
+            letterSpacing: 0.3,
+          }}
+        >
+          Goodbye
+        </Text>
+
+        <Text
+          variant="bodyMedium"
+          style={{
+            textAlign: "center",
+            color: theme.colors.onSurfaceVariant,
+          }}
+        >
+          You have successfully logged out.
+        </Text>
+      </View>
     </View>
   );
 }

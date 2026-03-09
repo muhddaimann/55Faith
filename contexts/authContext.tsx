@@ -8,7 +8,9 @@ import {
 import { jwtDecode } from "jwt-decode";
 import { OverlayConfirm } from "../components/confirm";
 import { OverlayAlert } from "../components/alert";
+import { OverlayToast } from "../components/toast";
 import { router } from 'expo-router';
+import { useStaffStore } from "./api/staffStore";
 
 type AuthContextType = {
   user: AuthResponse | null;
@@ -41,11 +43,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [showExpiredAlert, setShowExpiredAlert] = useState(false);
+  
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const { fetchStaff, clear: clearStaff, staff } = useStaffStore();
 
   const handleSignOut = async () => {
     try {
       await apiLogout();
       await clearStoredToken();
+      clearStaff();
       setUser(null);
       router.replace("/goodbye");
     } catch (e) {
@@ -66,6 +74,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setShowExpiredAlert(true);
           } else {
             setUser({ status: "success", token });
+            // Optionally fetch staff on reload if token is valid
+            fetchStaff();
           }
         }
       } catch (e) {
@@ -85,6 +95,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await apiLogin({ username, password });
       if (response.status === "success") {
         setUser(response);
+        
+        // Fetch staff details to get nick_name
+        await fetchStaff();
+        
+        // Use a small delay or check store for the name
+        // fetchStaff updates the store, so we can access it
+        const currentStaff = useStaffStore.getState().staff;
+        const name = currentStaff?.nick_name || "User";
+        
+        setSuccessMessage(`Welcome back, ${name}!`);
+        setShowSuccessToast(true);
       }
       return response;
     } catch (e) {
@@ -119,6 +140,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title="Session Expired"
         message="Your session has expired. Please login again."
         onClose={() => setShowExpiredAlert(false)}
+      />
+
+      <OverlayToast 
+        visible={showSuccessToast}
+        message={successMessage}
+        variant="success"
+        onDismiss={() => setShowSuccessToast(false)}
       />
     </AuthContext.Provider>
   );
