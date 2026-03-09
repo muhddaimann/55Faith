@@ -3,17 +3,37 @@ import { View } from "react-native";
 import { Text, useTheme, ActivityIndicator } from "react-native-paper";
 import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAuth } from "../contexts/authContext";
+import { useHome } from "../hooks/useHome";
 
 export default function Welcome() {
   const theme = useTheme();
   const tokens = useDesign();
+  const { user } = useAuth();
+  const { fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings } = useHome();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/(tabs)/a");
-    }, 2000);
-    return () => clearTimeout(timer);
+    const prepareDashboard = async () => {
+      const startTime = Date.now();
+      
+      // Fetch all essential data in parallel
+      await Promise.allSettled([
+        fetchLeaves(),
+        fetchBalance(),
+        fetchBroadcasts(),
+        fetchBookings()
+      ]);
+
+      // Ensure the user sees the welcome screen for at least 1.5 seconds for a smooth transition
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 1500 - elapsed);
+
+      setTimeout(() => {
+        router.replace("/(tabs)/a");
+      }, remaining);
+    };
+
+    prepareDashboard();
   }, []);
 
   return (
@@ -23,49 +43,26 @@ export default function Welcome() {
         backgroundColor: theme.colors.background,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: tokens.spacing["2xl"],
-        gap: tokens.spacing.xl,
+        paddingHorizontal: tokens.spacing.xl,
+        gap: tokens.spacing.lg,
       }}
     >
-      <View
+      <Text
+        variant="headlineMedium"
+        style={{ fontWeight: "700", textAlign: "center" }}
+      >
+        Welcome Back
+      </Text>
+
+      <Text
+        variant="bodyMedium"
         style={{
-          height: 80,
-          width: 80,
-          borderRadius: 40,
-          backgroundColor: theme.colors.primaryContainer,
-          alignItems: "center",
-          justifyContent: "center",
+          textAlign: "center",
+          color: theme.colors.onSurfaceVariant,
         }}
       >
-        <MaterialCommunityIcons
-          name="hand-wave-outline"
-          size={40}
-          color={theme.colors.primary}
-        />
-      </View>
-
-      <View style={{ alignItems: "center", gap: tokens.spacing.sm }}>
-        <Text
-          variant="headlineSmall"
-          style={{
-            fontWeight: "700",
-            textAlign: "center",
-            letterSpacing: 0.3,
-          }}
-        >
-          Welcome Back
-        </Text>
-
-        <Text
-          variant="bodyMedium"
-          style={{
-            textAlign: "center",
-            color: theme.colors.onSurfaceVariant,
-          }}
-        >
-          Preparing your dashboard
-        </Text>
-      </View>
+        Preparing your dashboard...
+      </Text>
 
       <ActivityIndicator size="small" color={theme.colors.primary} />
     </View>

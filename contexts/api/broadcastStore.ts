@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getActiveBroadcasts } from "./broadcast";
 
 export interface Broadcast {
   ID: number;
@@ -17,7 +18,10 @@ export interface Broadcast {
 interface BroadcastStore {
   broadcasts: Broadcast[];
   selectedBroadcast: Broadcast | null;
+  loading: boolean;
+  isInitialized: boolean;
 
+  fetchBroadcasts: (force?: boolean) => Promise<void>;
   setBroadcasts: (data: Broadcast[]) => void;
   setBroadcast: (broadcast: Broadcast) => void;
   clearBroadcast: () => void;
@@ -26,9 +30,25 @@ interface BroadcastStore {
   clear: () => void;
 }
 
-export const useBroadcastStore = create<BroadcastStore>((set) => ({
+export const useBroadcastStore = create<BroadcastStore>((set, get) => ({
   broadcasts: [],
   selectedBroadcast: null,
+  loading: false,
+  isInitialized: false,
+
+  fetchBroadcasts: async (force = false) => {
+    if (get().isInitialized && !force) return;
+
+    set({ loading: true });
+    try {
+      const res = await getActiveBroadcasts();
+      if (res?.status === "success" && res.data) {
+        set({ broadcasts: res.data, isInitialized: true });
+      }
+    } finally {
+      set({ loading: false });
+    }
+  },
 
   setBroadcasts: (data) => set({ broadcasts: data }),
 
@@ -47,5 +67,5 @@ export const useBroadcastStore = create<BroadcastStore>((set) => ({
           : state.selectedBroadcast,
     })),
 
-  clear: () => set({ broadcasts: [], selectedBroadcast: null }),
+  clear: () => set({ broadcasts: [], selectedBroadcast: null, isInitialized: false, loading: false }),
 }));

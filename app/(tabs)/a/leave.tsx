@@ -1,48 +1,135 @@
 import React, { useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { Text, Card, useTheme, Divider, Chip } from "react-native-paper";
+import { ScrollView, View, RefreshControl } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
+import { useHome } from "../../../hooks/useHome";
+import { useLeaveStore } from "../../../contexts/api/leaveStore";
+import { useBalanceStore } from "../../../contexts/api/balanceStore";
 import Header from "../../../components/header";
 import TwoRow from "../../../components/a/twoRow";
+import LeaveTable from "../../../components/a/leaveTable";
+import LeaveModalContent from "../../../components/a/leaveModal";
+import WithdrawModalContent from "../../../components/a/withdrawModal";
+import ScrollTop from "../../../components/scrollTop";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Leave } from "../../../contexts/api/leave";
+import { useLoader } from "../../../contexts/loaderContext";
+import { useOverlay } from "../../../contexts/overlayContext";
 
-export default function Leave() {
+export default function LeavePage() {
   const theme = useTheme();
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
+  const { showLoader, hideLoader } = useLoader();
+  const { showModal, hideModal } = useOverlay();
+
+  const {
+    leaves,
+    pendingLeaves,
+    approvedLeaves,
+    rejectedLeaves,
+    pendingLeavesCount,
+    annualLeaveLeft,
+    loading: isHomeLoading,
+    refreshHomeData,
+    fetchLeaves,
+    fetchBalance
+  } = useHome();
+
+  const { 
+    withdraw, 
+    loading: leavesStoreLoading, 
+    isInitialized: leaveInitialized 
+  } = useLeaveStore();
+  
+  const { 
+    isInitialized: balanceInitialized 
+  } = useBalanceStore();
+
+  const scrollViewRef = React.useRef<ScrollView | null>(null);
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+
+  const isFullyInitialized = leaveInitialized && balanceInitialized;
 
   useEffect(() => {
     setHideTabBar(true);
-    return () => setHideTabBar(false);
+    
+    const initData = async () => {
+      if (!isFullyInitialized) {
+        showLoader("Loading leave applications...");
+      }
+      try {
+        await Promise.all([fetchLeaves(), fetchBalance()]);
+      } finally {
+        hideLoader();
+      }
+    };
+
+    initData();
+    return () => {
+      setHideTabBar(false);
+      hideLoader();
+      hideModal();
+    };
   }, []);
 
-  const today = new Date().toLocaleDateString("en-MY", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const handleScroll = (e: any) => {
+    const offset = e.nativeEvent.contentOffset.y;
+    setShowScrollTop(offset > 300);
+  };
 
-  const leaves = [
-    {
-      type: "Annual Leave",
-      date: "21 Mar 2026",
-      days: "2 Days",
-      status: "Pending",
-    },
-    {
-      type: "Medical Leave",
-      date: "10 Mar 2026",
-      days: "1 Day",
-      status: "Approved",
-    },
-  ];
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const handleWithdrawConfirm = async (leave: Leave) => {
+    hideModal();
+    showLoader("Withdrawing leave...");
+    try {
+      const res = await withdraw(leave.leave_id);
+      if (res.success) {
+        await refreshHomeData();
+      }
+    } finally {
+      hideLoader();
+    }
+  };
+
+  const handleWithdrawInitiate = (leave: Leave) => {
+    showModal({
+      content: (
+        <WithdrawModalContent
+          leave={leave}
+          onConfirm={handleWithdrawConfirm}
+          onCancel={hideModal}
+          loading={leavesStoreLoading}
+        />
+      )
+    });
+  };
+
+  const handleLeavePress = (leave: Leave) => {
+    showModal({
+      content: (
+        <LeaveModalContent
+          leave={leave}
+          onWithdraw={handleWithdrawInitiate}
+        />
+      )
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
+        ref={scrollViewRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isHomeLoading} onRefresh={refreshHomeData} />
+        }
         contentContainerStyle={{
           paddingHorizontal: tokens.spacing.lg,
           paddingBottom: tokens.spacing["3xl"],
@@ -55,100 +142,51 @@ export default function Leave() {
           showBack
         />
 
-        <TwoRow
-          left={{
-            amount: 1,
-            label: "Pending Leave",
-            icon: (
-              <MaterialCommunityIcons
-                name="timer-sand"
-                size={20}
-                color={theme.colors.primary}
-              />
-            ),
-            bgColor: theme.colors.primaryContainer,
-            textColor: theme.colors.onPrimaryContainer,
-            labelColor: theme.colors.onPrimaryContainer,
-          }}
-          right={{
-            amount: 12,
-            label: "Leave Balance",
-            icon: (
-              <MaterialCommunityIcons
-                name="calendar-check-outline"
-                size={20}
-                color={theme.colors.secondary}
-              />
-            ),
-            bgColor: theme.colors.secondaryContainer,
-            textColor: theme.colors.onSecondaryContainer,
-            labelColor: theme.colors.onSecondaryContainer,
-          }}
-        />
+        {isFullyInitialized && (
+          <>
+            <TwoRow
+              left={{
+                amount: pendingLeavesCount,
+                label: "Pending Leave",
+                icon: (
+                  <MaterialCommunityIcons
+                    name="timer-sand"
+                    size={20}
+                    color={theme.colors.onPrimary}
+                  />
+                ),
+                bgColor: theme.colors.primary,
+                textColor: theme.colors.onPrimary,
+                labelColor: theme.colors.onPrimary,
+              }}
+              right={{
+                amount: annualLeaveLeft,
+                label: "AL Balance",
+                icon: (
+                  <MaterialCommunityIcons
+                    name="calendar-account-outline"
+                    size={20}
+                    color={theme.colors.onPrimaryContainer}
+                  />
+                ),
+                bgColor: theme.colors.primaryContainer,
+                textColor: theme.colors.onPrimaryContainer,
+                labelColor: theme.colors.onPrimaryContainer,
+              }}
+            />
 
-        <View style={{ gap: tokens.spacing.md }}>
-          <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-            Recent Applications
-          </Text>
-
-          <Card
-            mode="elevated"
-            style={{
-              borderRadius: tokens.radii.xl,
-              backgroundColor: theme.colors.surface,
-            }}
-            contentStyle={{
-              padding: tokens.spacing.md,
-              gap: tokens.spacing.sm,
-            }}
-          >
-            {leaves.map((leave, index) => (
-              <View key={index}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingVertical: tokens.spacing.xs,
-                  }}
-                >
-                  <View style={{ gap: 2 }}>
-                    <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-                      {leave.type}
-                    </Text>
-                    <Text
-                      variant="bodySmall"
-                      style={{ color: theme.colors.onSurfaceVariant }}
-                    >
-                      {leave.date} · {leave.days}
-                    </Text>
-                  </View>
-
-                  <Chip
-                    compact
-                    style={{
-                      backgroundColor:
-                        leave.status === "Approved"
-                          ? theme.colors.secondaryContainer
-                          : theme.colors.primaryContainer,
-                    }}
-                    textStyle={{
-                      color:
-                        leave.status === "Approved"
-                          ? theme.colors.onSecondaryContainer
-                          : theme.colors.onPrimaryContainer,
-                    }}
-                  >
-                    {leave.status}
-                  </Chip>
-                </View>
-
-                {index !== leaves.length - 1 && <Divider />}
-              </View>
-            ))}
-          </Card>
-        </View>
+            <LeaveTable 
+              leaves={leaves}
+              pending={pendingLeaves}
+              approved={approvedLeaves}
+              rejected={rejectedLeaves}
+              onLeavePress={handleLeavePress} 
+            />
+          </>
+        )}
       </ScrollView>
+
+      <ScrollTop visible={showScrollTop} onPress={scrollToTop} />
     </View>
   );
 }

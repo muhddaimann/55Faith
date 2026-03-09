@@ -12,9 +12,10 @@ import {
 interface RoomState {
   myBookings: BookingItem[];
   loading: boolean;
+  isInitialized: boolean;
   error: string | null;
 
-  fetchBookings: () => Promise<void>;
+  fetchBookings: (force?: boolean) => Promise<void>;
   createBooking: (
     bookDate: string,
     startTime: string,
@@ -32,18 +33,21 @@ interface RoomState {
   clear: () => void;
 }
 
-export const useRoomStore = create<RoomState>((set) => ({
+export const useRoomStore = create<RoomState>((set, get) => ({
   myBookings: [],
   loading: false,
+  isInitialized: false,
   error: null,
 
-  fetchBookings: async () => {
+  fetchBookings: async (force = false) => {
+    if (get().isInitialized && !force) return;
+    
     set({ loading: true, error: null });
     const res = await getMyBookingsApi();
     if ('error' in res) {
       set({ error: res.error, myBookings: [], loading: false });
     } else {
-      set({ myBookings: res, loading: false });
+      set({ myBookings: res, isInitialized: true, loading: false });
     }
   },
 

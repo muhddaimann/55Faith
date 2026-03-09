@@ -4,20 +4,24 @@ import { getLeaveBalance } from "./balance";
 type BalanceStore = {
   annualLeaveLeft: number;
   balanceLoading: boolean;
-  fetchBalance: () => Promise<void>;
+  isInitialized: boolean;
+  fetchBalance: (force?: boolean) => Promise<void>;
   clear: () => void;
 };
 
-export const useBalanceStore = create<BalanceStore>((set) => ({
+export const useBalanceStore = create<BalanceStore>((set, get) => ({
   annualLeaveLeft: 0,
-  balanceLoading: true,
-  fetchBalance: async () => {
+  balanceLoading: false,
+  isInitialized: false,
+  fetchBalance: async (force = false) => {
+    if (get().isInitialized && !force) return;
+    
     set({ balanceLoading: true });
     try {
       const month = new Date().toISOString().slice(0, 7);
       const res = await getLeaveBalance(month);
       if (!("error" in res)) {
-        set({ annualLeaveLeft: res.balance });
+        set({ annualLeaveLeft: res.balance, isInitialized: true });
       }
     } finally {
       set({ balanceLoading: false });
