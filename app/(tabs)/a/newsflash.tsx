@@ -1,46 +1,89 @@
 import React, { useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
+import { ScrollView, View, RefreshControl } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
+import { useHome } from "../../../hooks/useHome";
 import Header from "../../../components/header";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import NewsflashTable from "../../../components/a/newsflashTable";
+import NewsflashModalContent from "../../../components/a/newsflashModal";
+import ScrollTop from "../../../components/scrollTop";
+import { Broadcast } from "../../../contexts/api/broadcast";
+import { useOverlay } from "../../../contexts/overlayContext";
 
-export default function NewsFlashPage() {
+export default function NewsflashPage() {
   const theme = useTheme();
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
+  const { showModal, hideModal, toast } = useOverlay();
+
+  const {
+    broadcasts,
+    criticalBroadcasts,
+    importantBroadcasts,
+    normalBroadcasts,
+    loading,
+    refreshHomeData,
+    acknowledge
+  } = useHome();
+
+  const scrollViewRef = React.useRef<ScrollView | null>(null);
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
 
   useEffect(() => {
     setHideTabBar(true);
-    return () => setHideTabBar(false);
+    return () => {
+      setHideTabBar(false);
+      hideModal();
+    };
   }, []);
 
-  const news = [
-    {
-      title: "System Maintenance",
-      description: "Scheduled maintenance tonight at 11:00 PM.",
-      icon: "tools",
-      date: "18 March 2026",
-    },
-    {
-      title: "HR Policy Update",
-      description: "New leave policy effective next month.",
-      icon: "file-document-outline",
-      date: "17 March 2026",
-    },
-    {
-      title: "Office Closure",
-      description: "Office closed this Friday for maintenance.",
-      icon: "office-building-outline",
-      date: "15 March 2026",
-    },
-  ];
+  const handleScroll = (e: any) => {
+    const offset = e.nativeEvent.contentOffset.y;
+    setShowScrollTop(offset > 300);
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  const handleAcknowledge = async (id: number) => {
+    const res = await acknowledge(id);
+    if (res.success) {
+      toast({
+        message: "Announcement acknowledged successfully",
+        variant: "success"
+      });
+    } else {
+      toast({
+        message: res.message || "Failed to acknowledge announcement",
+        variant: "error"
+      });
+    }
+  };
+
+  const handlePress = (broadcast: Broadcast) => {
+    showModal({
+      content: (
+        <NewsflashModalContent
+          broadcast={broadcast}
+          onClose={hideModal}
+          onAcknowledge={handleAcknowledge}
+        />
+      )
+    });
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
+        ref={scrollViewRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refreshHomeData} />
+        }
         contentContainerStyle={{
           paddingHorizontal: tokens.spacing.lg,
           paddingBottom: tokens.spacing["3xl"],
@@ -49,63 +92,20 @@ export default function NewsFlashPage() {
       >
         <Header
           title="News Flash"
-          subtitle="Latest announcements & updates"
+          subtitle="Stay updated with latest announcements"
           showBack
         />
 
-        {news.map((item, index) => (
-          <Card
-            key={index}
-            mode="elevated"
-            style={{
-              borderRadius: tokens.radii.xl,
-              backgroundColor: theme.colors.surface,
-            }}
-            contentStyle={{
-              padding: tokens.spacing.lg,
-              gap: tokens.spacing.md,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                gap: tokens.spacing.md,
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: tokens.radii.full,
-                  backgroundColor: theme.colors.primaryContainer,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={item.icon as any}
-                  size={22}
-                  color={theme.colors.primary}
-                />
-              </View>
-
-              <View style={{ flex: 1, gap: tokens.spacing.xs }}>
-                <Text variant="titleMedium" style={{ fontWeight: "600" }}>
-                  {item.title}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: theme.colors.onSurfaceVariant }}
-                >
-                  {item.date}
-                </Text>
-                <Text variant="bodyMedium">{item.description}</Text>
-              </View>
-            </View>
-          </Card>
-        ))}
+        <NewsflashTable
+          broadcasts={broadcasts}
+          critical={criticalBroadcasts}
+          important={importantBroadcasts}
+          normal={normalBroadcasts}
+          onPress={handlePress}
+        />
       </ScrollView>
+
+      <ScrollTop visible={showScrollTop} onPress={scrollToTop} />
     </View>
   );
 }

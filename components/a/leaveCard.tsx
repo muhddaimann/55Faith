@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
 import { Text, Card, Chip, useTheme, Divider } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { Leave } from "../../contexts/api/leave";

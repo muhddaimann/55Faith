@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getActiveBroadcasts } from "./broadcast";
+import { getActiveBroadcasts, acknowledgeBroadcast } from "./broadcast";
 
 export interface Broadcast {
   ID: number;
@@ -26,6 +26,7 @@ interface BroadcastStore {
   setBroadcast: (broadcast: Broadcast) => void;
   clearBroadcast: () => void;
 
+  acknowledge: (id: number) => Promise<{ success: boolean; message?: string }>;
   markAcknowledged: (id: number) => void;
   clear: () => void;
 }
@@ -47,6 +48,19 @@ export const useBroadcastStore = create<BroadcastStore>((set, get) => ({
       }
     } finally {
       set({ loading: false });
+    }
+  },
+
+  acknowledge: async (id: number) => {
+    try {
+      const res = await acknowledgeBroadcast(id);
+      if (res?.status === "success") {
+        get().markAcknowledged(id);
+        return { success: true };
+      }
+      return { success: false, message: res?.message || "Failed to acknowledge" };
+    } catch (e) {
+      return { success: false, message: "Error acknowledging broadcast" };
     }
   },
 

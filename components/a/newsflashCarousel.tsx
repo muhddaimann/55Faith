@@ -1,88 +1,139 @@
-import React from "react";
-import { ScrollView, View, Dimensions } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { ScrollView, View, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useBroadcastStore } from "../../contexts/api/broadcastStore";
+import NewsflashCard from "./newsflashCard";
+import { useOverlay } from "../../contexts/overlayContext";
+import NewsflashModalContent from "./newsflashModal";
+import { Broadcast } from "../../contexts/api/broadcast";
 
 const { width } = Dimensions.get("window");
 
 export default function NewsFlashCarousel() {
   const { colors } = useTheme();
   const tokens = useDesign();
-  const { broadcasts } = useBroadcastStore();
+  const { broadcasts, acknowledge } = useBroadcastStore();
+  const { showModal, hideModal, toast } = useOverlay();
+  
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  if (broadcasts.length === 0) {
-    return (
-      <View style={{ padding: tokens.spacing.lg, alignItems: 'center' }}>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-          No announcements at the moment.
-        </Text>
-      </View>
-    );
+  const latestThree = useMemo(() => {
+    return [...broadcasts]
+      .sort((a, b) => new Date(b.CreatedDateTime.replace(' ', 'T')).getTime() - new Date(a.CreatedDateTime.replace(' ', 'T')).getTime())
+      .slice(0, 3);
+  }, [broadcasts]);
+
+  // Auto-loop effect
+  useEffect(() => {
+    if (latestThree.length <= 1) return;
+
+    const timer = setInterval(() => {
+      const nextIndex = (activeIndex + 1) % latestThree.length;
+      setActiveIndex(nextIndex);
+      scrollViewRef.current?.scrollTo({
+        x: nextIndex * (width * 0.85 + tokens.spacing.md),
+        animated: true,
+      });
+    }, 5000); // 5 seconds loop
+
+    return () => clearInterval(timer);
+  }, [activeIndex, latestThree.length, tokens.spacing.md]);
+
+  if (latestThree.length === 0) {
+    return null;
   }
 
+  const handleAcknowledge = async (id: number) => {
+    const res = await acknowledge(id);
+    if (res.success) {
+      toast({
+        message: "Announcement acknowledged successfully",
+        variant: "success"
+      });
+    } else {
+      toast({
+        message: res.message || "Failed to acknowledge announcement",
+        variant: "error"
+      });
+    }
+  };
+
+  const handlePress = (broadcast: Broadcast) => {
+    showModal({
+      content: (
+        <NewsflashModalContent
+          broadcast={broadcast}
+          onClose={hideModal}
+          onAcknowledge={handleAcknowledge}
+        />
+      )
+    });
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / (width * 0.85 + tokens.spacing.md));
+    if (index !== activeIndex && index >= 0 && index < latestThree.length) {
+      setActiveIndex(index);
+    }
+  };
+
   return (
-    <View>
+    <View style={{ gap: tokens.spacing.md }}>
       <ScrollView
+        ref={scrollViewRef}
         horizontal
+        pagingEnabled
         showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        snapToInterval={width * 0.85 + tokens.spacing.md}
+        decelerationRate="fast"
         contentContainerStyle={{
           paddingHorizontal: tokens.spacing.xs,
         }}
       >
-        {broadcasts.map((item, index) => (
+        {latestThree.map((item, index) => (
           <View
             key={item.ID}
             style={{
-              width: width * 0.75,
-              marginRight: index !== broadcasts.length - 1 ? tokens.spacing.md : 0,
+              width: width * 0.85,
+              marginRight: index !== latestThree.length - 1 ? tokens.spacing.md : 0,
             }}
           >
-            <Card
-              mode="elevated"
-              style={{
-                borderRadius: tokens.radii.xl,
-                backgroundColor: colors.surface,
-              }}
-              contentStyle={{
-                padding: tokens.spacing.lg,
-                gap: tokens.spacing.md,
-              }}
-            >
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: tokens.radii.full,
-                  backgroundColor: colors.primaryContainer,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={item.BroadcastPriority === "High" ? "alert-circle" : "bullhorn-outline"}
-                  size={20}
-                  color={colors.primary}
-                />
-              </View>
-
-              <View style={{ gap: tokens.spacing.xs }}>
-                <Text variant="titleMedium" style={{ fontWeight: "600" }} numberOfLines={1}>
-                  {item.NewsName}
-                </Text>
-                <Text
-                  variant="bodySmall"
-                  style={{ color: colors.onSurfaceVariant }}
-                  numberOfLines={2}
-                >
-                  {item.Description}
-                </Text>
-              </View>
-            </Card>
+            <NewsflashCard 
+              broadcast={item} 
+              onPress={handlePress} 
+            />
           </View>
         ))}
       </ScrollView>
+
+      {/* Pagination Indicators */}
+      {latestThree.length > 1 && (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {latestThree.map((_, index) => (
+            <View
+              key={index}
+              style={{
+                width: activeIndex === index ? 16 : 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: activeIndex === index ? colors.primary : colors.surfaceVariant,
+              }}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
