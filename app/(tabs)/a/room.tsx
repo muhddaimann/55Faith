@@ -6,11 +6,9 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Pressable,
-  LayoutAnimation,
-  Platform,
-  UIManager,
+  Image,
 } from "react-native";
-import { Text, Card, useTheme, Divider, Button } from "react-native-paper";
+import { Text, Card, useTheme, Divider } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import Header from "../../../components/header";
@@ -24,21 +22,15 @@ import { useRouter, useFocusEffect } from "expo-router";
 import NoData from "../../../components/noData";
 import RoomModalContent from "../../../components/a/roomModal";
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export default function RoomPage() {
   const theme = useTheme();
   const tokens = useDesign();
   const router = useRouter();
   const { setHideTabBar } = useTabs();
   const { showModal, hideModal } = useOverlay();
-
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [collapsedTowers, setCollapsedTowers] = useState<Record<string, boolean>>({});
-
   const {
     rooms,
     activeBookingsCount,
@@ -55,8 +47,6 @@ export default function RoomPage() {
   };
 
   const [selectedDate, setSelectedDate] = useState(getLocalISO());
-
-  // Group rooms by Tower then Level
   const groupedRooms = rooms.reduce((acc: any, room: any) => {
     const tower = room.Tower;
     const level = room.Level;
@@ -92,7 +82,6 @@ export default function RoomPage() {
   };
 
   const toggleTower = (tower: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setCollapsedTowers(prev => ({
       ...prev,
       [tower]: !prev[tower]
@@ -116,7 +105,6 @@ export default function RoomPage() {
 
   const handleConfirmSlots = (room: any, start: string, end: string) => {
     hideModal();
-    // Navigate to dedicated booking page to collect purpose
     router.push({
       pathname: "/a/book",
       params: {
@@ -225,42 +213,54 @@ export default function RoomPage() {
                         elevation: 1,
                       }}
                     >
-                      {groupedRooms[tower][level].map((room: any, idx: number) => (
-                        <View key={room.room_id}>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: tokens.spacing.md,
-                            }}
-                          >
-                            <View style={{ flex: 1, gap: 2 }}>
-                              <Text variant="bodyLarge" style={{ fontWeight: "600" }}>
-                                {room.Room_Name}
-                              </Text>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                <MaterialCommunityIcons name="account-group-outline" size={14} color={theme.colors.onSurfaceVariant} />
-                                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                                  Up to {room.Capacity} Pax
-                                </Text>
-                              </View>
+                      {/* Inner View wrapper to handle overflow for shadows */}
+                      <View style={{ borderRadius: tokens.radii.xl, overflow: 'hidden' }}>
+                        {groupedRooms[tower][level].map((room: any, idx: number) => {
+                          const imageUrl = `https://endpoint.daythree.ai/faithMobile/room/${room.room_id}.jpeg`;
+                          
+                          return (
+                            <View key={room.room_id}>
+                              <Pressable
+                                onPress={() => handleBookPress(room)}
+                                style={({ pressed }) => ({
+                                  flexDirection: "row",
+                                  alignItems: "stretch", // Allow items to fill height
+                                  backgroundColor: pressed ? theme.colors.surfaceVariant : 'transparent'
+                                })}
+                              >
+                                <View style={{ flex: 1, gap: 2, padding: tokens.spacing.md, justifyContent: 'center' }}>
+                                  <Text variant="bodyLarge" style={{ fontWeight: "600" }}>
+                                    {room.Room_Name}
+                                  </Text>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                    <MaterialCommunityIcons name="account-group-outline" size={14} color={theme.colors.onSurfaceVariant} />
+                                    <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                                      Up to {room.Capacity} Pax
+                                    </Text>
+                                  </View>
+                                </View>
+                                
+                                <View 
+                                  style={{ 
+                                    width: 80, 
+                                    height: 80, 
+                                    backgroundColor: theme.colors.surfaceVariant,
+                                  }}
+                                >
+                                  <Image
+                                    source={{ uri: imageUrl }}
+                                    style={{ width: '100%', height: '100%' }}
+                                    resizeMode="cover"
+                                  />
+                                </View>
+                              </Pressable>
+                              {idx !== groupedRooms[tower][level].length - 1 && (
+                                <Divider style={{ marginHorizontal: tokens.spacing.md, opacity: 0.5 }} />
+                              )}
                             </View>
-
-                            <Button
-                              mode="contained-tonal"
-                              onPress={() => handleBookPress(room)}
-                              style={{ borderRadius: tokens.radii.lg }}
-                              labelStyle={{ fontWeight: '700' }}
-                            >
-                              Book
-                            </Button>
-                          </View>
-                          {idx !== groupedRooms[tower][level].length - 1 && (
-                            <Divider style={{ marginHorizontal: tokens.spacing.md, opacity: 0.5 }} />
-                          )}
-                        </View>
-                      ))}
+                          );
+                        })}
+                      </View>
                     </Card>
                   </View>
                 ))}

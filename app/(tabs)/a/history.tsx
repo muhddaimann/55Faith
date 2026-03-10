@@ -70,7 +70,12 @@ export default function BookingHistoryPage() {
     hideModal();
     showLoader("Cancelling booking...");
     try {
-      const res = await cancelBooking(booking.Booking_Num);
+      // Pass roomName and date string to invalidate specific cache
+      const res = await cancelBooking(
+        booking.Booking_Num, 
+        booking.Room_Name, 
+        booking.Start_Date.split(' ')[0]
+      );
       if (res.execute_success) {
         toast({
           message: "Booking cancelled successfully",

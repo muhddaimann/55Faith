@@ -27,6 +27,7 @@ export function useHome() {
     createBooking,
     loading: roomLoading,
     cancelBooking,
+    clearAvailability,
   } = useRoomStore();
 
   // Memoize greeting
@@ -162,6 +163,7 @@ export function useHome() {
     markAcknowledged,
     acknowledge,
     cancelBooking,
+    clearAvailability,
   };
 }
 
@@ -304,19 +306,14 @@ export default function useRoom(date: string) {
       setViewedBookingPurpose(null);
 
       setSelection((prev) => {
-        // If nothing selected, pick this slot
         if (!prev) {
           return { startTime: start, endTime: end };
         }
 
-        // If clicking the exact same slot that was already selected alone, toggle off
         if (start === prev.startTime && end === prev.endTime) {
           return null;
         }
 
-        // SMART SELECTION LOGIC:
-        // If we already have a multi-slot range selected, OR if the new click is far away,
-        // we reset to a new single slot.
         const prevStartMin = parseTimeToMinutes(prev.startTime, false);
         const prevEndMin = parseTimeToMinutes(prev.endTime, true);
         const isSingleSlot = (prevEndMin - prevStartMin) === 30;
@@ -325,7 +322,6 @@ export default function useRoom(date: string) {
           return { startTime: start, endTime: end };
         }
 
-        // Otherwise, expand the current single slot to a range
         if (startMinutes < prevStartMin) {
           return { startTime: start, endTime: prev.endTime };
         } else {

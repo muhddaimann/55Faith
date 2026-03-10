@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
-import { View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, ScrollView } from "react-native";
 import {
   Text,
   TextInput,
@@ -28,7 +28,7 @@ export default function BookPage() {
   const { createBooking, staff, refreshHomeData } = useHome();
 
   const [purpose, setPurpose] = useState("");
-  const pic = staff?.full_name || "";
+  const [pic, setPic] = useState(staff?.full_name || "");
 
   useFocusEffect(
     useCallback(() => {
@@ -37,12 +37,11 @@ export default function BookPage() {
     }, []),
   );
 
-  const isDisabled = useMemo(() => {
-    return !purpose.trim();
-  }, [purpose]);
-
   const handleFinalizeBooking = async () => {
-    if (isDisabled) return;
+    if (!purpose.trim()) {
+      toast({ message: "Please enter meeting purpose", variant: "error" });
+      return;
+    }
 
     showLoader("Processing booking...");
     try {
@@ -56,6 +55,7 @@ export default function BookPage() {
         purpose,
         pic,
         "",
+        Number(params.room_id),
       );
 
       if ("error" in res) {
@@ -66,7 +66,7 @@ export default function BookPage() {
       } else {
         toast({ message: "Room booked successfully!", variant: "success" });
         await refreshHomeData();
-        router.replace("/(tabs)/a");
+        router.replace("/a/history");
       }
     } finally {
       hideLoader();
@@ -83,16 +83,13 @@ export default function BookPage() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-    >
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: tokens.spacing.lg,
           paddingBottom: tokens.spacing["3xl"],
-          gap: tokens.spacing.md,
+          gap: tokens.spacing.lg,
         }}
       >
         <Header
@@ -106,25 +103,17 @@ export default function BookPage() {
           style={{
             borderRadius: tokens.radii.xl,
             backgroundColor: theme.colors.surface,
+            elevation: 2,
           }}
         >
-          <View
-            style={{
-              padding: tokens.spacing.lg,
-              gap: tokens.spacing.lg,
-            }}
-          >
-            <View style={{ gap: tokens.spacing.xxs }}>
+          <View style={{ padding: tokens.spacing.lg, gap: tokens.spacing.md }}>
+            <View style={{ gap: 4 }}>
               <Text
                 variant="titleMedium"
-                style={{
-                  fontWeight: tokens.typography.weights.bold,
-                  color: theme.colors.primary,
-                }}
+                style={{ fontWeight: "700", color: theme.colors.primary }}
               >
                 {params.room_name}
               </Text>
-
               <Text
                 variant="bodySmall"
                 style={{ color: theme.colors.onSurfaceVariant }}
@@ -137,38 +126,26 @@ export default function BookPage() {
 
             <View style={{ gap: tokens.spacing.sm }}>
               <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: tokens.spacing.sm,
-                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
               >
                 <MaterialCommunityIcons
                   name="calendar-outline"
-                  size={tokens.sizes.icon.md}
+                  size={20}
                   color={theme.colors.primary}
                 />
                 <Text variant="bodyMedium">
                   {formatDate(params.date as string)}
                 </Text>
               </View>
-
               <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: tokens.spacing.sm,
-                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
               >
                 <MaterialCommunityIcons
                   name="clock-outline"
-                  size={tokens.sizes.icon.md}
+                  size={20}
                   color={theme.colors.primary}
                 />
-                <Text
-                  variant="bodyMedium"
-                  style={{ fontWeight: tokens.typography.weights.semibold }}
-                >
+                <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
                   {params.start_time} - {params.end_time}
                 </Text>
               </View>
@@ -177,59 +154,36 @@ export default function BookPage() {
         </Card>
 
         <View style={{ gap: tokens.spacing.md }}>
-          <View style={{ gap: tokens.spacing.sm }}>
-            <Text
-              variant="labelMedium"
-              style={{ fontWeight: tokens.typography.weights.semibold }}
-            >
-              Person In Charge
-            </Text>
-
-            <TextInput
-              mode="outlined"
-              value={pic}
-              disabled
-              outlineStyle={{ borderRadius: tokens.radii.lg }}
-            />
-          </View>
-
-          <View style={{ gap: tokens.spacing.sm }}>
-            <Text
-              variant="labelMedium"
-              style={{ fontWeight: tokens.typography.weights.semibold }}
-            >
-              Meeting Purpose
-            </Text>
-
-            <TextInput
-              mode="outlined"
-              placeholder="e.g. Project Kickoff Meeting"
-              value={purpose}
-              onChangeText={setPurpose}
-              outlineStyle={{ borderRadius: tokens.radii.lg }}
-            />
-          </View>
+          <TextInput
+            label="Person In Charge (PIC)"
+            mode="outlined"
+            value={pic}
+            onChangeText={setPic}
+            outlineStyle={{ borderRadius: tokens.radii.lg }}
+          />
+          <TextInput
+            label="Meeting Purpose / Event Name"
+            mode="outlined"
+            placeholder="e.g. Project Kickoff Meeting"
+            value={purpose}
+            onChangeText={setPurpose}
+            outlineStyle={{ borderRadius: tokens.radii.lg }}
+          />
 
           <Button
             mode="contained"
-            disabled={isDisabled}
             onPress={handleFinalizeBooking}
             style={{
-              marginTop: tokens.spacing.sm,
+              marginTop: tokens.spacing.md,
               borderRadius: tokens.radii.lg,
             }}
-            contentStyle={{
-              height: tokens.sizes.touch.minHeight,
-            }}
-            labelStyle={{
-              fontSize: tokens.typography.sizes.sm,
-              fontWeight: tokens.typography.weights.bold,
-            }}
+            contentStyle={{ height: 52 }}
+            labelStyle={{ fontSize: 16, fontWeight: "700" }}
           >
             Confirm & Book
           </Button>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

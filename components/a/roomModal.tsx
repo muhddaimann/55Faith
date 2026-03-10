@@ -195,7 +195,7 @@ export default function RoomModalContent({
               variant="labelMedium"
               style={{ fontWeight: tokens.typography.weights.semibold }}
             >
-              Availability Grid
+              Room Availability
             </Text>
 
             <View style={{ flexDirection: "row", gap: tokens.spacing.sm }}>
@@ -208,8 +208,8 @@ export default function RoomModalContent({
               >
                 <View
                   style={{
-                    width: tokens.spacing.xxs,
-                    height: tokens.spacing.xxs,
+                    width: tokens.spacing.xs,
+                    height: tokens.spacing.xs,
                     borderRadius: tokens.radii.full,
                     backgroundColor: theme.colors.tertiaryContainer,
                   }}
@@ -234,8 +234,8 @@ export default function RoomModalContent({
               >
                 <View
                   style={{
-                    width: tokens.spacing.xxs,
-                    height: tokens.spacing.xxs,
+                    width: tokens.spacing.xs,
+                    height: tokens.spacing.xs,
                     borderRadius: tokens.radii.full,
                     backgroundColor: theme.colors.surfaceVariant,
                   }}
