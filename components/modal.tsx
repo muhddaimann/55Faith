@@ -81,7 +81,8 @@ export function OverlayModal({
               style={{
                 backgroundColor: theme.colors.surface,
                 borderRadius: tokens.radii.xl,
-                padding: tokens.spacing.lg,
+                paddingVertical: tokens.spacing.md,
+                paddingHorizontal: tokens.spacing.lg,
               }}
             >
               {content}

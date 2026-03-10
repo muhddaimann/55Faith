@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import {
   ScrollView,
   View,
@@ -15,13 +15,22 @@ import { useHome } from "../../../hooks/useHome";
 import Header from "../../../components/header";
 import ScrollTop from "../../../components/scrollTop";
 import NoData from "../../../components/noData";
+import BookingCard from "../../../components/a/bookingCard";
+import BookingModalContent from "../../../components/a/bookingModal";
+import { useOverlay } from "../../../contexts/overlayContext";
+import { BookingItem } from "../../../contexts/api/room";
+import { useLoader } from "../../../contexts/loaderContext";
+import { useFocusEffect } from "expo-router";
 
 type FilterValue = "upcoming" | "past";
 
 export default function BookingHistoryPage() {
   const theme = useTheme();
   const tokens = useDesign();
-  const { setHideTabBar, onScroll } = useTabs();
+  const { setHideTabBar } = useTabs();
+  const { showModal, hideModal, confirm, toast } = useOverlay();
+  const { showLoader, hideLoader } = useLoader();
+  
   const scrollRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [filter, setFilter] = useState<FilterValue>("upcoming");
@@ -30,18 +39,23 @@ export default function BookingHistoryPage() {
     activeBookings, 
     pastBookings, 
     loading, 
-    refreshHomeData 
+    refreshHomeData,
+    cancelBooking 
   } = useHome();
 
-  useEffect(() => {
-    setHideTabBar(true);
-    return () => setHideTabBar(false);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setHideTabBar(true);
+      return () => {
+        setHideTabBar(false);
+        hideModal();
+      };
+    }, [])
+  );
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
     setShowScrollTop(offset > 300);
-    onScroll(offset);
   };
 
   const scrollToTop = () => {
@@ -52,58 +66,47 @@ export default function BookingHistoryPage() {
     return filter === "upcoming" ? activeBookings : pastBookings;
   }, [filter, activeBookings, pastBookings]);
 
-  const getStatusStyle = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return {
-          bg: theme.colors.tertiaryContainer,
-          text: theme.colors.onTertiaryContainer,
-        };
-      case "cancelled":
-        return {
-          bg: theme.colors.errorContainer,
-          text: theme.colors.onErrorContainer,
-        };
-      case "pending":
-        return {
-          bg: theme.colors.primaryContainer,
-          text: theme.colors.onPrimaryContainer,
-        };
-      default:
-        return {
-          bg: theme.colors.surfaceVariant,
-          text: theme.colors.onSurfaceVariant,
-        };
+  const handleCancelConfirm = async (booking: BookingItem) => {
+    hideModal();
+    showLoader("Cancelling booking...");
+    try {
+      const res = await cancelBooking(booking.Booking_Num);
+      if (res.execute_success) {
+        toast({
+          message: "Booking cancelled successfully",
+          variant: "success"
+        });
+        await refreshHomeData();
+      } else {
+        toast({
+          message: "Failed to cancel booking",
+          variant: "error"
+        });
+      }
+    } finally {
+      hideLoader();
     }
   };
 
-  const formatDateTime = (startStr: string, endStr: string) => {
-    try {
-      const start = new Date(startStr.replace(" ", "T"));
-      const end = new Date(endStr.replace(" ", "T"));
-      
-      const datePart = start.toLocaleDateString("en-MY", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
-      
-      const startTime = start.toLocaleTimeString("en-MY", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      
-      const endTime = end.toLocaleTimeString("en-MY", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
+  const handleCancelInitiate = (booking: BookingItem) => {
+    confirm({
+      title: "Cancel Booking",
+      message: `Are you sure you want to cancel your booking for ${booking.Room_Name} on ${booking.Start_Date}?`,
+      confirmText: "Cancel Booking",
+      isDestructive: true,
+      onConfirm: () => handleCancelConfirm(booking)
+    });
+  };
 
-      return `${datePart} · ${startTime} - ${endTime}`;
-    } catch (e) {
-      return `${startStr} - ${endStr}`;
-    }
+  const handlePress = (booking: BookingItem) => {
+    showModal({
+      content: (
+        <BookingModalContent
+          booking={booking}
+          onWithdraw={handleCancelInitiate}
+        />
+      )
+    });
   };
 
   const tabs: { label: string; value: FilterValue }[] = [
@@ -180,93 +183,15 @@ export default function BookingHistoryPage() {
             icon="calendar-clock-outline"
           />
         ) : (
-          <Card
-            mode="elevated"
-            style={{
-              borderRadius: tokens.radii.xl,
-              backgroundColor: theme.colors.surface,
-            }}
-            contentStyle={{
-              padding: tokens.spacing.md,
-              gap: tokens.spacing.sm,
-            }}
-          >
-            {filteredData.map((booking: any, index: number) => {
-              const statusStyle = getStatusStyle(booking.Status);
-              return (
-                <View key={booking.booking_id || index}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      paddingVertical: tokens.spacing.xs,
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: tokens.spacing.sm,
-                        flex: 1,
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 18,
-                          backgroundColor: theme.colors.surfaceVariant,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <MaterialCommunityIcons
-                          name="door-open"
-                          size={18}
-                          color={theme.colors.primary}
-                        />
-                      </View>
-
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          variant="bodyLarge"
-                          style={{ fontWeight: "600" }}
-                          numberOfLines={1}
-                        >
-                          {booking.Room_Name}
-                        </Text>
-
-                        <Text
-                          variant="labelSmall"
-                          style={{ color: theme.colors.onSurfaceVariant }}
-                        >
-                          {formatDateTime(booking.Start_Date, booking.End_Date)}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Chip
-                      compact
-                      style={{
-                        backgroundColor: statusStyle.bg,
-                      }}
-                      textStyle={{
-                        color: statusStyle.text,
-                        fontSize: 10,
-                      }}
-                    >
-                      {booking.Status}
-                    </Chip>
-                  </View>
-
-                  {index !== filteredData.length - 1 && (
-                    <Divider style={{ marginVertical: 4, opacity: 0.5 }} />
-                  )}
-                </View>
-              );
-            })}
-          </Card>
+          <View style={{ gap: 0 }}>
+            {filteredData.map((booking) => (
+              <BookingCard
+                key={booking.booking_id}
+                booking={booking}
+                onPress={handlePress}
+              />
+            ))}
+          </View>
         )}
       </ScrollView>
 

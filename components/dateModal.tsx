@@ -30,9 +30,7 @@ export default function DatePicker({
 }: DatePickerProps) {
   const theme = useTheme();
   const tokens = useDesign();
-
   const today = todayISO();
-
   const [single, setSingle] = useState(initialDate ?? today);
   const [range, setRange] = useState({
     start: initialRange?.start ?? "",
@@ -131,7 +129,7 @@ export default function DatePicker({
   return (
     <View
       style={{
-        gap: tokens.spacing.md,
+        gap: tokens.spacing.sm,
       }}
     >
       <View style={{ gap: 2 }}>

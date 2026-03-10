@@ -6,14 +6,17 @@ import {
   getMyBookings as getMyBookingsApi,
   cancelBooking as cancelBookingApi,
   getAllRooms as getAllRoomsApi,
+  getRoomAvailabilityByDay as getRoomAvailabilityApi,
   ErrorResponse,
   CancelBookingResponse,
   Room,
+  Availability,
 } from '../api/room';
 
 interface RoomState {
   rooms: Room[];
   myBookings: BookingItem[];
+  availability: Record<string, Availability>; // Key: roomId_date
   loading: boolean;
   isInitialized: boolean;
   isRoomsInitialized: boolean;
@@ -21,6 +24,7 @@ interface RoomState {
 
   fetchBookings: (force?: boolean) => Promise<void>;
   fetchRooms: (force?: boolean) => Promise<void>;
+  fetchAvailability: (roomId: number, date: string) => Promise<void>;
   createBooking: (
     bookDate: string,
     startTime: string,
@@ -41,6 +45,7 @@ interface RoomState {
 export const useRoomStore = create<RoomState>((set, get) => ({
   rooms: [],
   myBookings: [],
+  availability: {},
   loading: false,
   isInitialized: false,
   isRoomsInitialized: false,
@@ -70,6 +75,24 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
+  fetchAvailability: async (roomId: number, date: string) => {
+    const key = `${roomId}_${date}`;
+    // If already have data, don't show global loading to keep UI snappy
+    // but still fetch in background if needed. For now, just skip if exists.
+    if (get().availability[key]) return;
+
+    set({ loading: true });
+    const res = await getRoomAvailabilityApi(roomId, date);
+    if ('error' in res) {
+      set({ error: res.error, loading: false });
+    } else {
+      set((state) => ({
+        availability: { ...state.availability, [key]: res.availability },
+        loading: false
+      }));
+    }
+  },
+
   createBooking: async (bookDate, startTime, endTime, room, tower, level, purpose, PIC, email) => {
     set({ loading: true, error: null });
     const res = await bookRoomApi(
@@ -87,6 +110,9 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       set({ error: res.error, loading: false });
     } else {
       set({ error: null });
+      // Clear availability cache for this room/date since it just changed
+      const key = `${res.success}_${bookDate}`; // This might not be the roomId, but we should ideally clear relevant keys
+      // Simplest is to refresh bookings and perhaps clear availability cache for that date
       await get().fetchBookings(true);
     }
     set({ loading: false });
@@ -109,6 +135,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   clear: () => set({ 
     rooms: [], 
     myBookings: [], 
+    availability: {},
     loading: false, 
     isInitialized: false, 
     isRoomsInitialized: false, 

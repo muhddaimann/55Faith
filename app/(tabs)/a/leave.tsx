@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, View, RefreshControl } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Leave } from "../../../contexts/api/leave";
 import { useLoader } from "../../../contexts/loaderContext";
 import { useOverlay } from "../../../contexts/overlayContext";
+import { useFocusEffect } from "expo-router";
 
 export default function LeavePage() {
   const theme = useTheme();
@@ -52,27 +53,29 @@ export default function LeavePage() {
 
   const isFullyInitialized = leaveInitialized && balanceInitialized;
 
-  useEffect(() => {
-    setHideTabBar(true);
-    
-    const initData = async () => {
-      if (!isFullyInitialized) {
-        showLoader("Loading leave applications...");
-      }
-      try {
-        await Promise.all([fetchLeaves(), fetchBalance()]);
-      } finally {
-        hideLoader();
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      setHideTabBar(true);
+      
+      const initData = async () => {
+        if (!isFullyInitialized) {
+          showLoader("Loading leave applications...");
+        }
+        try {
+          await Promise.all([fetchLeaves(), fetchBalance()]);
+        } finally {
+          hideLoader();
+        }
+      };
 
-    initData();
-    return () => {
-      setHideTabBar(false);
-      hideLoader();
-      hideModal();
-    };
-  }, []);
+      initData();
+      return () => {
+        setHideTabBar(false);
+        hideLoader();
+        hideModal();
+      };
+    }, [isFullyInitialized])
+  );
 
   const handleScroll = (e: any) => {
     const offset = e.nativeEvent.contentOffset.y;

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback } from "react";
 import { ScrollView, View, RefreshControl } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
@@ -10,6 +10,7 @@ import NewsflashModalContent from "../../../components/a/newsflashModal";
 import ScrollTop from "../../../components/scrollTop";
 import { Broadcast } from "../../../contexts/api/broadcast";
 import { useOverlay } from "../../../contexts/overlayContext";
+import { useFocusEffect } from "expo-router";
 
 export default function NewsflashPage() {
   const theme = useTheme();
@@ -30,13 +31,15 @@ export default function NewsflashPage() {
   const scrollViewRef = React.useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = React.useState(false);
 
-  useEffect(() => {
-    setHideTabBar(true);
-    return () => {
-      setHideTabBar(false);
-      hideModal();
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setHideTabBar(true);
+      return () => {
+        setHideTabBar(false);
+        hideModal();
+      };
+    }, [])
+  );
 
   const handleScroll = (e: any) => {
     const offset = e.nativeEvent.contentOffset.y;
