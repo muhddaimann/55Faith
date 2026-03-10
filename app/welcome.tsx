@@ -10,7 +10,7 @@ export default function Welcome() {
   const theme = useTheme();
   const tokens = useDesign();
   const { user } = useAuth();
-  const { fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings } = useHome();
+  const { fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings, fetchRooms } = useHome();
 
   useEffect(() => {
     const prepareDashboard = async () => {
@@ -21,7 +21,8 @@ export default function Welcome() {
         fetchLeaves(),
         fetchBalance(),
         fetchBroadcasts(),
-        fetchBookings()
+        fetchBookings(),
+        fetchRooms()
       ]);
 
       // Ensure the user sees the welcome screen for at least 1.5 seconds for a smooth transition

@@ -10,7 +10,7 @@ export function useHome() {
   const { leaves, fetchLeaves, loading: leavesLoading } = useLeaveStore();
   const { annualLeaveLeft, fetchBalance, balanceLoading } = useBalanceStore();
   const { broadcasts, fetchBroadcasts, loading: broadcastLoading, markAcknowledged, acknowledge } = useBroadcastStore();
-  const { myBookings, fetchBookings, loading: roomLoading } = useRoomStore();
+  const { myBookings, rooms, fetchBookings, fetchRooms, loading: roomLoading, cancelBooking } = useRoomStore();
   
   // Memoize greeting
   const greeting = useMemo(() => {
@@ -59,11 +59,22 @@ export function useHome() {
     };
   }, [broadcasts]);
 
-  // Memoize Room stats
-  const roomStats = useMemo(() => ({
-    activeCount: myBookings.filter((b) => b.Tag === "Upcoming" && b.Status !== "Cancelled").length,
-    historyCount: myBookings.length,
-  }), [myBookings]);
+  // Memoize Room stats and data
+  const roomData = useMemo(() => {
+    const active = myBookings.filter((b) => b.Tag === "Upcoming" && b.Status !== "Cancelled");
+    const past = myBookings.filter((b) => b.Tag === "Past");
+    const cancelled = myBookings.filter((b) => b.Status === "Cancelled");
+
+    return {
+      allBookings: myBookings,
+      activeBookings: active,
+      pastBookings: past,
+      cancelledBookings: cancelled,
+      activeCount: active.length,
+      historyCount: myBookings.length,
+      roomList: rooms,
+    };
+  }, [myBookings, rooms]);
 
   // Combined loading state
   const isHomeLoading = leavesLoading || balanceLoading || broadcastLoading || roomLoading;
@@ -74,9 +85,10 @@ export function useHome() {
       fetchLeaves(true),
       fetchBalance(true),
       fetchBroadcasts(true),
-      fetchBookings(true)
+      fetchBookings(true),
+      fetchRooms(true)
     ]);
-  }, [fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings]);
+  }, [fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings, fetchRooms]);
 
   return {
     greeting,
@@ -93,15 +105,22 @@ export function useHome() {
     importantBroadcasts: broadcastData.important,
     normalBroadcasts: broadcastData.normal,
     broadcastCount: broadcastData.count,
-    activeBookingsCount: roomStats.activeCount,
-    bookingHistoryCount: roomStats.historyCount,
+    activeBookings: roomData.activeBookings,
+    pastBookings: roomData.pastBookings,
+    cancelledBookings: roomData.cancelledBookings,
+    bookings: roomData.allBookings,
+    activeBookingsCount: roomData.activeCount,
+    bookingHistoryCount: roomData.historyCount,
+    rooms: roomData.roomList,
     loading: isHomeLoading,
     refreshHomeData,
     fetchLeaves,
     fetchBalance,
     fetchBroadcasts,
     fetchBookings,
+    fetchRooms,
     markAcknowledged,
-    acknowledge
+    acknowledge,
+    cancelBooking
   };
 }

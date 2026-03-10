@@ -75,7 +75,7 @@ export default function Home() {
           head="Leave Application"
           subHeader="Apply & track your leave status"
           rightSlot={
-            <Button compact mode="text" onPress={() => router.navigate("/a/leave")}>
+            <Button compact mode="text" onPress={() => router.push("/a/leave")}>
               View More
             </Button>
           }

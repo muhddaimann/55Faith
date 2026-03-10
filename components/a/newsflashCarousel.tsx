@@ -1,5 +1,11 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { ScrollView, View, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import {
+  ScrollView,
+  View,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import { useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { useBroadcastStore } from "../../contexts/api/broadcastStore";
@@ -13,15 +19,19 @@ const { width } = Dimensions.get("window");
 export default function NewsFlashCarousel() {
   const { colors } = useTheme();
   const tokens = useDesign();
-  const { broadcasts, acknowledge } = useBroadcastStore();
-  const { showModal, hideModal, toast } = useOverlay();
-  
+  const { broadcasts, markAcknowledged } = useBroadcastStore();
+  const { showModal, hideModal } = useOverlay();
+
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const latestThree = useMemo(() => {
     return [...broadcasts]
-      .sort((a, b) => new Date(b.CreatedDateTime.replace(' ', 'T')).getTime() - new Date(a.CreatedDateTime.replace(' ', 'T')).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.CreatedDateTime.replace(" ", "T")).getTime() -
+          new Date(a.CreatedDateTime.replace(" ", "T")).getTime(),
+      )
       .slice(0, 3);
   }, [broadcasts]);
 
@@ -45,36 +55,23 @@ export default function NewsFlashCarousel() {
     return null;
   }
 
-  const handleAcknowledge = async (id: number) => {
-    const res = await acknowledge(id);
-    if (res.success) {
-      toast({
-        message: "Announcement acknowledged successfully",
-        variant: "success"
-      });
-    } else {
-      toast({
-        message: res.message || "Failed to acknowledge announcement",
-        variant: "error"
-      });
-    }
-  };
-
   const handlePress = (broadcast: Broadcast) => {
     showModal({
       content: (
         <NewsflashModalContent
           broadcast={broadcast}
           onClose={hideModal}
-          onAcknowledge={handleAcknowledge}
+          onAcknowledge={markAcknowledged}
         />
-      )
+      ),
     });
   };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / (width * 0.85 + tokens.spacing.md));
+    const index = Math.round(
+      scrollPosition / (width * 0.85 + tokens.spacing.md),
+    );
     if (index !== activeIndex && index >= 0 && index < latestThree.length) {
       setActiveIndex(index);
     }
@@ -93,6 +90,7 @@ export default function NewsFlashCarousel() {
         decelerationRate="fast"
         contentContainerStyle={{
           paddingHorizontal: tokens.spacing.xs,
+          alignItems: "center",
         }}
       >
         {latestThree.map((item, index) => (
@@ -100,13 +98,11 @@ export default function NewsFlashCarousel() {
             key={item.ID}
             style={{
               width: width * 0.85,
-              marginRight: index !== latestThree.length - 1 ? tokens.spacing.md : 0,
+              marginRight:
+                index !== latestThree.length - 1 ? tokens.spacing.md : 0,
             }}
           >
-            <NewsflashCard 
-              broadcast={item} 
-              onPress={handlePress} 
-            />
+            <NewsflashCard broadcast={item} onPress={handlePress} />
           </View>
         ))}
       </ScrollView>
@@ -128,7 +124,10 @@ export default function NewsFlashCarousel() {
                 width: activeIndex === index ? 16 : 6,
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: activeIndex === index ? colors.primary : colors.surfaceVariant,
+                backgroundColor:
+                  activeIndex === index
+                    ? colors.primary
+                    : colors.surfaceVariant,
               }}
             />
           ))}
