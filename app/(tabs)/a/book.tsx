@@ -28,7 +28,7 @@ export default function BookPage() {
   const { createBooking, staff, refreshHomeData } = useHome();
 
   const [purpose, setPurpose] = useState("");
-  const [pic, setPic] = useState(staff?.full_name || "");
+  const pic = staff?.full_name || "";
 
   useFocusEffect(
     useCallback(() => {
@@ -158,9 +158,10 @@ export default function BookPage() {
             label="Person In Charge (PIC)"
             mode="outlined"
             value={pic}
-            onChangeText={setPic}
+            disabled
             outlineStyle={{ borderRadius: tokens.radii.lg }}
           />
+
           <TextInput
             label="Meeting Purpose / Event Name"
             mode="outlined"

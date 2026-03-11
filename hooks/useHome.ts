@@ -98,8 +98,12 @@ export function useHome() {
     const active = myBookings.filter(
       (b) => b.Tag === "Upcoming" && b.Status !== "Cancelled",
     );
-    const past = myBookings.filter((b) => b.Tag === "Past");
-    const cancelled = myBookings.filter((b) => b.Status === "Cancelled");
+    const past = myBookings.filter(
+      (b) => b.Tag === "Past" && b.Status !== "Cancelled",
+    );
+    const cancelled = myBookings.filter(
+      (b) => b.Status === "Cancelled" || b.Tag === "Cancelled",
+    );
 
     return {
       allBookings: myBookings,
@@ -107,7 +111,7 @@ export function useHome() {
       pastBookings: past,
       cancelledBookings: cancelled,
       activeCount: active.length,
-      historyCount: myBookings.length,
+      historyCount: active.length + past.length,
       roomList: rooms,
     };
   }, [myBookings, rooms]);
