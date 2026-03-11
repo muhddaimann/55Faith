@@ -1,34 +1,28 @@
 import { useMemo, useCallback, useState } from "react";
 import { useStaffStore } from "../contexts/api/staffStore";
-import { useLeaveStore } from "../contexts/api/leaveStore";
-import { useBalanceStore } from "../contexts/api/balanceStore";
 import { useBroadcastStore } from "../contexts/api/broadcastStore";
 import { useRoomStore } from "../contexts/api/roomStore";
 import { Room } from "../contexts/api/room";
 
 export function useHome() {
-  const { staff } = useStaffStore();
-  const { leaves, fetchLeaves, loading: leavesLoading } = useLeaveStore();
-  const { annualLeaveLeft, fetchBalance, balanceLoading } = useBalanceStore();
-  const {
-    broadcasts,
-    fetchBroadcasts,
-    loading: broadcastLoading,
-    markAcknowledged,
-    acknowledge,
-  } = useBroadcastStore();
-  const {
-    myBookings,
-    rooms,
-    availability,
-    fetchBookings,
-    fetchRooms,
-    fetchAvailability,
-    createBooking,
-    loading: roomLoading,
-    cancelBooking,
-    clearAvailability,
-  } = useRoomStore();
+  const staff = useStaffStore((state) => state.staff);
+
+  const broadcasts = useBroadcastStore((state) => state.broadcasts);
+  const fetchBroadcasts = useBroadcastStore((state) => state.fetchBroadcasts);
+  const broadcastLoading = useBroadcastStore((state) => state.loading);
+  const markAcknowledged = useBroadcastStore((state) => state.markAcknowledged);
+  const acknowledge = useBroadcastStore((state) => state.acknowledge);
+
+  const myBookings = useRoomStore((state) => state.myBookings);
+  const rooms = useRoomStore((state) => state.rooms);
+  const availability = useRoomStore((state) => state.availability);
+  const fetchBookings = useRoomStore((state) => state.fetchBookings);
+  const fetchRooms = useRoomStore((state) => state.fetchRooms);
+  const fetchAvailability = useRoomStore((state) => state.fetchAvailability);
+  const createBooking = useRoomStore((state) => state.createBooking);
+  const roomLoading = useRoomStore((state) => state.loading);
+  const cancelBooking = useRoomStore((state) => state.cancelBooking);
+  const clearAvailability = useRoomStore((state) => state.clearAvailability);
 
   // Memoize greeting
   const greeting = useMemo(() => {
@@ -48,28 +42,6 @@ export function useHome() {
     }),
     [staff],
   );
-
-  // Memoize Leave Data and Stats
-  const leaveData = useMemo(() => {
-    const pending = leaves.filter(
-      (l) => l.manager_status.toLowerCase() === "pending",
-    );
-    const approved = leaves.filter(
-      (l) => l.manager_status.toLowerCase() === "approved",
-    );
-    const rejected = leaves.filter(
-      (l) => l.manager_status.toLowerCase() === "rejected",
-    );
-
-    return {
-      all: leaves,
-      pending,
-      approved,
-      rejected,
-      pendingCount: pending.length,
-      historyCount: leaves.length,
-    };
-  }, [leaves]);
 
   // Memoize Broadcast Data by Priority
   const broadcastData = useMemo(() => {
@@ -118,30 +90,21 @@ export function useHome() {
 
   // Combined loading state
   const isHomeLoading =
-    leavesLoading || balanceLoading || broadcastLoading || roomLoading;
+    broadcastLoading || roomLoading;
 
   // Optimized refresh
   const refreshHomeData = useCallback(async () => {
     await Promise.allSettled([
-      fetchLeaves(true),
-      fetchBalance(true),
       fetchBroadcasts(true),
       fetchBookings(true),
       fetchRooms(true),
     ]);
-  }, [fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings, fetchRooms]);
+  }, [fetchBroadcasts, fetchBookings, fetchRooms]);
 
   return {
     greeting,
     staff,
     ...staffInfo,
-    leaves: leaveData.all,
-    pendingLeaves: leaveData.pending,
-    approvedLeaves: leaveData.approved,
-    rejectedLeaves: leaveData.rejected,
-    pendingLeavesCount: leaveData.pendingCount,
-    leaveHistoryCount: leaveData.historyCount,
-    annualLeaveLeft,
     broadcasts: broadcastData.all,
     criticalBroadcasts: broadcastData.critical,
     importantBroadcasts: broadcastData.important,
@@ -157,8 +120,6 @@ export function useHome() {
     availability,
     loading: isHomeLoading,
     refreshHomeData,
-    fetchLeaves,
-    fetchBalance,
     fetchBroadcasts,
     fetchBookings,
     fetchRooms,

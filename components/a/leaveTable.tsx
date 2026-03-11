@@ -16,7 +16,7 @@ type Props = {
 
 type FilterValue = "all" | "pending" | "approved" | "rejected";
 
-export default function LeaveTable({ 
+function LeaveTable({ 
   leaves, 
   pending, 
   approved, 
@@ -112,3 +112,5 @@ export default function LeaveTable({
     </View>
   );
 }
+
+export default React.memo(LeaveTable);

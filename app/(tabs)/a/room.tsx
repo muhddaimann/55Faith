@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   ScrollView,
   View,
@@ -15,6 +15,7 @@ import Header from "../../../components/header";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useHome } from "../../../hooks/useHome";
 import { useOverlay } from "../../../contexts/overlayContext";
+import { useLoader } from "../../../contexts/loaderContext";
 import DateModal from "../../../components/dateModal";
 import RoomSummary from "../../../components/a/roomSummary";
 import ScrollTop from "../../../components/scrollTop";
@@ -28,6 +29,7 @@ export default function RoomPage() {
   const router = useRouter();
   const { setHideTabBar } = useTabs();
   const { showModal, hideModal } = useOverlay();
+  const { showLoader, hideLoader } = useLoader();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [collapsedTowers, setCollapsedTowers] = useState<Record<string, boolean>>({});
@@ -39,6 +41,15 @@ export default function RoomPage() {
     fetchRooms,
     fetchBookings,
   } = useHome();
+
+  // Consistent global loader for initial data fetch
+  useEffect(() => {
+    if (loading && rooms.length === 0) {
+      showLoader("Loading rooms...");
+    } else if (!loading) {
+      hideLoader();
+    }
+  }, [loading, rooms.length, showLoader, hideLoader]);
 
   const getLocalISO = () => {
     const now = new Date();

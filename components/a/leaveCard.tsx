@@ -10,7 +10,7 @@ type Props = {
   onPress: (leave: Leave) => void;
 };
 
-export default function LeaveCard({ leave, onPress }: Props) {
+export default React.memo(function LeaveCard({ leave, onPress }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
 
@@ -88,10 +88,12 @@ export default function LeaveCard({ leave, onPress }: Props) {
                 color={theme.colors.primary}
               />
             </View>
+
             <View>
               <Text variant="titleMedium" style={{ fontWeight: "700" }}>
                 {leave.leave_name}
               </Text>
+
               <Text
                 variant="bodySmall"
                 style={{ color: theme.colors.onSurfaceVariant }}
@@ -100,6 +102,7 @@ export default function LeaveCard({ leave, onPress }: Props) {
               </Text>
             </View>
           </View>
+
           <Chip
             compact
             style={{ backgroundColor: statusStyle.bg }}
@@ -130,13 +133,18 @@ export default function LeaveCard({ leave, onPress }: Props) {
               size={14}
               color={theme.colors.onSurfaceVariant}
             />
+
             <Text
               variant="bodySmall"
-              style={{ opacity: 0.8, color: theme.colors.onSurfaceVariant }}
+              style={{
+                opacity: 0.8,
+                color: theme.colors.onSurfaceVariant,
+              }}
             >
               {leave.date}
             </Text>
           </View>
+
           {leave.reason && (
             <View
               style={{
@@ -150,9 +158,13 @@ export default function LeaveCard({ leave, onPress }: Props) {
                 size={14}
                 color={theme.colors.onSurfaceVariant}
               />
+
               <Text
                 variant="bodySmall"
-                style={{ opacity: 0.8, color: theme.colors.onSurfaceVariant }}
+                style={{
+                  opacity: 0.8,
+                  color: theme.colors.onSurfaceVariant,
+                }}
                 numberOfLines={1}
               >
                 {leave.reason}
@@ -163,4 +175,4 @@ export default function LeaveCard({ leave, onPress }: Props) {
       </View>
     </Card>
   );
-}
+});

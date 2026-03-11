@@ -10,6 +10,7 @@ export default function HomeLayout() {
       <Stack.Screen name="history" options={{ title: "Booking History" }} />
       <Stack.Screen name="book" options={{ title: "Confirm Booking" }} />
       <Stack.Screen name="leave" options={{ title: "Main Form" }} />
+      <Stack.Screen name="apply" options={{ title: "Main Form" }} />
     </Stack>
   );
 }

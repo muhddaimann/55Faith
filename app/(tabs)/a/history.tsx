@@ -43,6 +43,15 @@ export default function BookingHistoryPage() {
     cancelBooking 
   } = useHome();
 
+  // Consistent global loader for initial data fetch
+  useEffect(() => {
+    if (loading && activeBookings.length === 0 && pastBookings.length === 0) {
+      showLoader("Loading bookings...");
+    } else if (!loading) {
+      hideLoader();
+    }
+  }, [loading, activeBookings.length, pastBookings.length, showLoader, hideLoader]);
+
   useFocusEffect(
     useCallback(() => {
       setHideTabBar(true);

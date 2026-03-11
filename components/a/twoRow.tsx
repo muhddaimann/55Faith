@@ -17,7 +17,7 @@ type TwoRowProps = {
   right: TwoRowItem;
 };
 
-export default function TwoRow({ left, right }: TwoRowProps) {
+export default React.memo(function TwoRow({ left, right }: TwoRowProps) {
   const { colors } = useTheme();
   const tokens = useDesign();
 
@@ -72,4 +72,4 @@ export default function TwoRow({ left, right }: TwoRowProps) {
       ))}
     </View>
   );
-}
+});

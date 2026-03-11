@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   ScrollView,
   NativeSyntheticEvent,
@@ -17,23 +17,46 @@ import { useRouter } from "expo-router";
 import NewsFlashCarousel from "../../../components/a/newsflashCarousel";
 import TwoRow from "../../../components/a/twoRow";
 import { useHome } from "../../../hooks/useHome";
+import useLeave from "../../../hooks/useLeave";
+import { useLoader } from "../../../contexts/loaderContext";
 
 export default function Home() {
   const theme = useTheme();
   const tokens = useDesign();
   const router = useRouter();
   const { onScroll } = useTabs();
+  const { showLoader, hideLoader } = useLoader();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const {
-    pendingLeavesCount,
-    annualLeaveLeft,
-    loading,
+    loading: homeLoading,
     activeBookingsCount,
     bookingHistoryCount,
-    refreshHomeData,
+    refreshHomeData: refreshHome,
+    staff,
   } = useHome();
+
+  const {
+    leave,
+    loading: leaveLoading,
+    refreshLeaveData: refreshLeave,
+  } = useLeave();
+
+  const loading = homeLoading || leaveLoading;
+
+  const refreshHomeData = useCallback(async () => {
+    await Promise.allSettled([refreshHome(), refreshLeave()]);
+  }, [refreshHome, refreshLeave]);
+
+  // Consistent global loader for initial data fetch
+  React.useEffect(() => {
+    if (loading && !staff && leave.history.length === 0) {
+      showLoader("Loading your dashboard...");
+    } else if (!loading) {
+      hideLoader();
+    }
+  }, [loading, staff, leave.history.length, showLoader, hideLoader]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
@@ -83,7 +106,7 @@ export default function Home() {
 
         <TwoRow
           left={{
-            amount: pendingLeavesCount,
+            amount: leave.pending,
             label: "Pending Leave",
             icon: (
               <MaterialCommunityIcons
@@ -97,7 +120,7 @@ export default function Home() {
             labelColor: theme.colors.onPrimary,
           }}
           right={{
-            amount: annualLeaveLeft,
+            amount: leave.annualLeaveLeft,
             label: "AL Balance",
             icon: (
               <MaterialCommunityIcons

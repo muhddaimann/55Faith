@@ -5,12 +5,22 @@ import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { useAuth } from "../contexts/authContext";
 import { useHome } from "../hooks/useHome";
+import useLeave from "../hooks/useLeave";
 
 export default function Welcome() {
   const theme = useTheme();
   const tokens = useDesign();
   const { user } = useAuth();
-  const { fetchLeaves, fetchBalance, fetchBroadcasts, fetchBookings, fetchRooms } = useHome();
+  
+  const { 
+    fetchBroadcasts, 
+    fetchBookings, 
+    fetchRooms 
+  } = useHome();
+
+  const {
+    refreshLeaveData
+  } = useLeave();
 
   useEffect(() => {
     const prepareDashboard = async () => {
@@ -18,8 +28,7 @@ export default function Welcome() {
       
       // Fetch all essential data in parallel
       await Promise.allSettled([
-        fetchLeaves(),
-        fetchBalance(),
+        refreshLeaveData(),
         fetchBroadcasts(),
         fetchBookings(),
         fetchRooms()
@@ -35,7 +44,7 @@ export default function Welcome() {
     };
 
     prepareDashboard();
-  }, []);
+  }, [refreshLeaveData, fetchBroadcasts, fetchBookings, fetchRooms]);
 
   return (
     <View

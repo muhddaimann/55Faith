@@ -17,8 +17,7 @@ type LeaveStore = {
   loading: boolean;
   submitting: boolean;
   submissionError: string | null;
-  isInitialized: boolean;
-  fetchLeaves: (force?: boolean) => Promise<void>;
+  fetchLeaves: () => Promise<void>;
   addNewLeave: (formData: FormData) => Promise<StoreActionResponse>;
   withdraw: (id: number) => Promise<StoreActionResponse>;
   clear: () => void;
@@ -29,15 +28,12 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
   loading: false,
   submitting: false,
   submissionError: null,
-  isInitialized: false,
 
-  fetchLeaves: async (force = false) => {
-    if (get().isInitialized && !force) return Promise.resolve();
-    
+  fetchLeaves: async () => {
     set({ loading: true });
     try {
       const data = await getLeave();
-      set({ leaves: data, isInitialized: true });
+      set({ leaves: data });
     } finally {
       set({ loading: false });
     }
