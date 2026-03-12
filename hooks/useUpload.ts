@@ -98,7 +98,7 @@ export function useUpload() {
       return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: 'images',
       quality: 1,
     });
 
@@ -116,7 +116,7 @@ export function useUpload() {
       return;
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: 'images',
       quality: 1,
     });
 

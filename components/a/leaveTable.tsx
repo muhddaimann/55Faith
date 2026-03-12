@@ -3,9 +3,8 @@ import { View, Pressable, FlatList } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { useOverlay } from "../../contexts/overlayContext";
-import { useLeaveStore } from "../../contexts/api/leaveStore";
-import { useBalanceStore } from "../../contexts/api/balanceStore";
 import { useLoader } from "../../contexts/loaderContext";
+import useLeave from "../../hooks/useLeave";
 import { LeaveItem } from "../../constants/leave";
 import LeaveCard from "./leaveCard";
 import LeaveModalContent from "./leaveModal";
@@ -22,8 +21,7 @@ export default function LeaveTable({ history }: Props) {
   const tokens = useDesign();
   const { showModal, hideModal, confirm, toast } = useOverlay();
   const { showLoader, hideLoader } = useLoader();
-  const withdraw = useLeaveStore((s) => s.withdraw);
-  const fetchBalance = useBalanceStore((s) => s.fetchBalance);
+  const { withdrawRequest } = useLeave();
   const [filter, setFilter] = useState<FilterValue>("all");
   const [ready, setReady] = useState(false);
 
@@ -68,17 +66,11 @@ export default function LeaveTable({ history }: Props) {
       message: "Are you sure you want to withdraw this application?",
       onConfirm: async () => {
         showLoader("Withdrawing...");
-        const result = await withdraw(Number(item.id));
-        if (result.success) {
-          await fetchBalance();
-          toast({ message: "Withdrawn successfully", variant: "success" });
-        } else {
-          toast({
-            message: result.error || "Failed to withdraw",
-            variant: "error",
-          });
+        try {
+          await withdrawRequest(Number(item.id));
+        } finally {
+          hideLoader();
         }
-        hideLoader();
       },
     });
   };

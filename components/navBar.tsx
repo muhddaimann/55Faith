@@ -71,7 +71,7 @@ export function NavBar() {
               {
                 label: "Apply Leave",
                 icon: "file-document-edit-outline",
-                onPress: () => router.push("a/room"),
+                onPress: () => router.push("a/apply"),
               },
             ]}
           />

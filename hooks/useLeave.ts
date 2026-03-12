@@ -1,6 +1,8 @@
 import { useMemo, useEffect, useCallback } from "react";
+import { useRouter } from "expo-router";
 import { useLeaveStore } from "../contexts/api/leaveStore";
 import { useBalanceStore } from "../contexts/api/balanceStore";
+import { useOverlay } from "../contexts/overlayContext";
 import {
   LEAVE_TYPES,
   LEAVE_PERIODS,
@@ -49,6 +51,8 @@ function resolveDuration(
 }
 
 export default function useLeave() {
+  const router = useRouter();
+  const { toast } = useOverlay();
   const {
     leaves,
     fetchLeaves,
@@ -66,8 +70,6 @@ export default function useLeave() {
   }, [fetchLeaves, fetchBalance]);
 
   const leave = useMemo<LeaveSummary>(() => {
-    // NO MAP HERE. Just raw items from store.
-    // Calculations are deferred to individual components.
     return {
       annualLeaveLeft,
       pending: leaves.filter((l) => l.isPending).length,
@@ -129,23 +131,47 @@ export default function useLeave() {
       }
 
       const result = await addNewLeave(formData);
+      
       if (result.success) {
-        await fetchBalance();
+        await fetchBalance(true);
+        // Navigate back first
+        router.back();
+        // Delay toast so it appears after navigation is underway/complete
+        setTimeout(() => {
+          toast({
+            message: "Application submitted successfully",
+            variant: "success",
+          });
+        }, 300);
+      } else {
+        toast({
+          message: result.error || "Failed to submit application",
+          variant: "error",
+        });
       }
+      
       return result;
     },
-    [addNewLeave, fetchBalance],
+    [addNewLeave, fetchBalance, router, toast],
   );
 
   const withdrawRequest = useCallback(
     async (id: number) => {
       const result = await withdraw(id);
       if (result.success) {
-        await fetchBalance();
+        await fetchBalance(true);
+        setTimeout(() => {
+          toast({ message: "Withdrawn successfully", variant: "success" });
+        }, 100);
+      } else {
+        toast({
+          message: result.error || "Failed to withdraw",
+          variant: "error",
+        });
       }
       return result;
     },
-    [withdraw, fetchBalance],
+    [withdraw, fetchBalance, toast],
   );
 
   return {

@@ -72,7 +72,7 @@ export default function LeaveApply() {
       !!dateRange.start &&
       (isFullDay ? !!dateRange.end : true) &&
       !!reason;
-    const medical = isMedical ? !!clinic && !!illness : true;
+    const medical = isMedical ? !!illness : true;
     const attach = requiresAttachment ? !!attachment : true;
     return basic && medical && attach && duration > 0;
   }, [
@@ -81,7 +81,6 @@ export default function LeaveApply() {
     dateRange,
     reason,
     isMedical,
-    clinic,
     illness,
     requiresAttachment,
     attachment,
@@ -258,7 +257,7 @@ export default function LeaveApply() {
     showLoader("Submitting request...");
 
     try {
-      const res = await submitLeaveRequest({
+      await submitLeaveRequest({
         leaveType: leaveType.value,
         period: period.value,
         range: dateRange,
@@ -269,21 +268,6 @@ export default function LeaveApply() {
         attachment,
         attachmentRef,
       });
-
-      if (res.success) {
-        toast({
-          message: "Application submitted successfully",
-          variant: "success",
-        });
-        router.back();
-      } else {
-        toast({
-          message: res.error || "Failed to submit application",
-          variant: "error",
-        });
-      }
-    } catch (e) {
-      toast({ message: "An unexpected error occurred", variant: "error" });
     } finally {
       hideLoader();
     }
