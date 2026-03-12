@@ -1,75 +1,17 @@
 import { useMemo, useEffect, useCallback } from "react";
-import { useTheme } from "react-native-paper";
 import { useLeaveStore } from "../contexts/api/leaveStore";
 import { useBalanceStore } from "../contexts/api/balanceStore";
-import type { Leave } from "../contexts/api/leave";
-
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
-export type LeaveStatusTone = "secondary" | "tertiary" | "error" | "neutral";
-
-export type LeaveStatusMeta = {
-  label: string;
-  tone: LeaveStatusTone;
-};
-
-export type LeaveStatusColors = {
-  container: string;
-  onContainer: string;
-};
-
-export type LeaveOption<T extends string = string> = {
-  value: T;
-  label: string;
-  description?: string;
-  isMedical?: boolean;
-  requiresAttachment?: boolean;
-};
-
-export type LeaveItem = {
-  id: string;
-  type: string;
-  name: string;
-  status: LeaveStatus;
-  statusMeta: LeaveStatusMeta;
-  statusColors: LeaveStatusColors;
-  periodLabel: string;
-  dateLabel: string;
-  dateRangeLabel: string;
-  durationLabel: string;
-  returnLabel?: string;
-  days: number;
-  isSingleDay: boolean;
-  isCancelled: boolean;
-  isPending: boolean;
-  raw: Leave;
-};
+import {
+  LEAVE_TYPES,
+  LEAVE_PERIODS,
+  LEAVE_REASONS,
+  type LeaveItem,
+} from "../constants/leave";
 
 export type LeaveSummary = {
   annualLeaveLeft: number;
   pending: number;
   history: LeaveItem[];
-};
-
-export type LeaveOptions = {
-  leaveTypes: LeaveOption<
-    | "AL"
-    | "SL"
-    | "UL"
-    | "RL"
-    | "MR"
-    | "PL"
-    | "CL"
-    | "ML"
-    | "CAL"
-    | "HL"
-    | "PGL"
-    | "PH"
-    | "GL"
-    | "EL"
-    | "WFH"
-  >[];
-  leavePeriods: LeaveOption[];
-  leaveReasons: LeaveOption[];
 };
 
 export type SubmitLeavePayload = {
@@ -87,47 +29,6 @@ export type SubmitLeavePayload = {
   };
   attachmentRef?: string;
 };
-
-const LEAVE_STATUS_META: Record<LeaveStatus, LeaveStatusMeta> = {
-  PENDING: { label: "Pending", tone: "secondary" },
-  APPROVED: { label: "Approved", tone: "tertiary" },
-  REJECTED: { label: "Rejected", tone: "error" },
-  CANCELLED: { label: "Cancelled", tone: "neutral" },
-};
-
-function formatDate(date: string) {
-  const d = new Date(`${date}T00:00:00`);
-  return d.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function buildDateRangeLabel(start: string, end: string) {
-  if (start === end) return formatDate(start);
-  return `${formatDate(start)} → ${formatDate(end)}`;
-}
-
-function buildReturnLabel(endDate?: string) {
-  if (!endDate) return undefined;
-  const d = new Date(`${endDate}T00:00:00`);
-  d.setDate(d.getDate() + 1);
-  return `Return: ${formatDate(d.toISOString().slice(0, 10))}`;
-}
-
-function resolveStatus(l: Leave): LeaveStatus {
-  if (
-    l.cancellation_dt ||
-    l.cancellation_action === "CANCELLED" ||
-    l.manager_status === "Cancelled"
-  ) {
-    return "CANCELLED";
-  }
-  if (l.manager_status === "Approved") return "APPROVED";
-  if (l.manager_status === "Rejected") return "REJECTED";
-  return "PENDING";
-}
 
 function diffDays(start: string, end: string): number {
   const s = new Date(`${start}T00:00:00`).getTime();
@@ -148,7 +49,6 @@ function resolveDuration(
 }
 
 export default function useLeave() {
-  const { colors } = useTheme();
   const {
     leaves,
     fetchLeaves,
@@ -165,119 +65,28 @@ export default function useLeave() {
     fetchBalance();
   }, [fetchLeaves, fetchBalance]);
 
-  const toneColors: Record<LeaveStatusTone, LeaveStatusColors> = {
-    secondary: {
-      container: colors.secondaryContainer,
-      onContainer: colors.onSecondaryContainer,
-    },
-    tertiary: {
-      container: colors.tertiaryContainer,
-      onContainer: colors.onTertiaryContainer,
-    },
-    error: {
-      container: colors.errorContainer,
-      onContainer: colors.onErrorContainer,
-    },
-    neutral: {
-      container: colors.surfaceDisabled,
-      onContainer: colors.onSurfaceDisabled,
-    },
-  };
-
-  const options: LeaveOptions = useMemo(
-    () => ({
-      leaveTypes: [
-        { label: "Annual Leave", value: "AL" },
-        {
-          label: "Sick Leave",
-          value: "SL",
-          isMedical: true,
-          requiresAttachment: true,
-        },
-        { label: "Unpaid Leave", value: "UL" },
-        { label: "Replacement Leave", value: "RL" },
-        { label: "Marriage Leave", value: "MR" },
-        { label: "Paternity Leave", value: "PL" },
-        { label: "Compassionate Leave", value: "CL" },
-        { label: "Maternity Leave", value: "ML", isMedical: true },
-        { label: "Calamity Leave", value: "CAL" },
-        {
-          label: "Hospitalisation",
-          value: "HL",
-          isMedical: true,
-          requiresAttachment: true,
-        },
-        { label: "Pilgrimage Leave", value: "PGL" },
-        { label: "Public Holiday", value: "PH" },
-        { label: "Garden Leave", value: "GL" },
-        {
-          label: "Emergency Leave",
-          value: "EL",
-          requiresAttachment: true,
-        },
-        {
-          label: "Work From Home",
-          value: "WFH",
-          requiresAttachment: true,
-        },
-      ],
-      leavePeriods: [
-        { value: "Full Day", label: "Full Day" },
-        { value: "1st Half Day", label: "First Half Day" },
-        { value: "2nd Half Day", label: "Second Half Day" },
-      ],
-      leaveReasons: [
-        { value: "Personal", label: "Personal" },
-        { value: "Back To Hometown", label: "Back To Hometown" },
-        { value: "Family Matters", label: "Family matters" },
-        { value: "Medical", label: "Medical appointment" },
-        { value: "Emergency", label: "Emergency" },
-        { value: "Others", label: "Others" },
-      ],
-    }),
-    [],
-  );
-
   const leave = useMemo<LeaveSummary>(() => {
-    if (loading) return { annualLeaveLeft, pending: 0, history: [] };
-
-    const history: LeaveItem[] = leaves.map((l) => {
-      const status = resolveStatus(l);
-      const days = Number(l.duration) || 1;
-      const statusMeta = LEAVE_STATUS_META[status];
-
-      return {
-        id: String(l.leave_id),
-        type: l.leave_type,
-        name: l.leave_name,
-        status,
-        statusMeta,
-        statusColors: toneColors[statusMeta.tone],
-        periodLabel: l.leave_period,
-        dateLabel: formatDate(l.start_date),
-        dateRangeLabel: buildDateRangeLabel(l.start_date, l.end_date),
-        durationLabel: `${days} day${days !== 1 ? "s" : ""}`,
-        returnLabel:
-          status !== "CANCELLED" ? buildReturnLabel(l.end_date) : undefined,
-        days,
-        isSingleDay: days === 1,
-        isCancelled: status === "CANCELLED",
-        isPending: status === "PENDING",
-        raw: l,
-      };
-    });
-
+    // NO MAP HERE. Just raw items from store.
+    // Calculations are deferred to individual components.
     return {
       annualLeaveLeft,
-      pending: history.filter((l) => l.isPending).length,
-      history,
+      pending: leaves.filter((l) => l.isPending).length,
+      history: leaves,
     };
-  }, [leaves, annualLeaveLeft, loading, toneColors]);
+  }, [leaves, annualLeaveLeft]);
 
   const helpers = useMemo(
     () => ({
       diffDays,
-      buildDateRangeLabel,
+    }),
+    [],
+  );
+
+  const options = useMemo(
+    () => ({
+      leaveTypes: LEAVE_TYPES,
+      leavePeriods: LEAVE_PERIODS,
+      leaveReasons: LEAVE_REASONS,
     }),
     [],
   );
@@ -286,7 +95,7 @@ export default function useLeave() {
     async (payload: SubmitLeavePayload) => {
       const duration = resolveDuration(payload.period, payload.range);
 
-      const selectedLeave = options.leaveTypes.find(
+      const selectedLeave = LEAVE_TYPES.find(
         (l) => l.value === payload.leaveType,
       );
 
@@ -325,7 +134,7 @@ export default function useLeave() {
       }
       return result;
     },
-    [addNewLeave, fetchBalance, options.leaveTypes],
+    [addNewLeave, fetchBalance],
   );
 
   const withdrawRequest = useCallback(
@@ -339,10 +148,6 @@ export default function useLeave() {
     [withdraw, fetchBalance],
   );
 
-  const refreshLeaveData = useCallback(async () => {
-    await Promise.allSettled([fetchLeaves(), fetchBalance()]);
-  }, [fetchLeaves, fetchBalance]);
-
   return {
     leave,
     loading: loading || balanceLoading,
@@ -352,8 +157,5 @@ export default function useLeave() {
     withdrawRequest,
     submitting,
     submissionError,
-    refreshLeaveData,
-    fetchLeaves,
-    fetchBalance,
   };
 }

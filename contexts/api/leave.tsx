@@ -1,9 +1,9 @@
-import api from './api';
+import api from "./api";
 
 export type Leave = {
   leave_id: number;
   leave_type: string;
-  leave_name: string; 
+  leave_name: string;
   leave_period: string;
   start_date: string;
   start: string;
@@ -28,29 +28,29 @@ export type Leave = {
 export type LeaveResponse = {
   message?: string;
   leaveRecords?: Leave[];
-  leave_id?: number; 
+  leave_id?: number;
   error?: string;
 };
 
 export const getLeave = async (): Promise<Leave[]> => {
   try {
-    const response = await api.get<Leave[]>('/leave.php');
+    const response = await api.get<Leave[]>("/leave.php");
 
     if (!Array.isArray(response.data)) {
-      throw new Error('No leave records found');
+      throw new Error("No leave records found");
     }
 
     return response.data;
   } catch (error) {
-    console.error('Error fetching leave records:', error);
+    console.error("Error fetching leave records:", error);
     throw error;
   }
 };
 
 export const addLeave = async (formData: FormData): Promise<LeaveResponse> => {
   try {
-    const response = await api.post<LeaveResponse>('/leave.php', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const response = await api.post<LeaveResponse>("/leave.php", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
 
     if (response.data.error) {
@@ -59,14 +59,19 @@ export const addLeave = async (formData: FormData): Promise<LeaveResponse> => {
 
     return response.data;
   } catch (error) {
-    console.error('Error adding leave record:', error);
+    console.error("Error adding leave record:", error);
     throw error;
   }
 };
 
-export const withdrawLeave = async (leave_id: number): Promise<LeaveResponse> => {
+export const withdrawLeave = async (
+  leave_id: number,
+): Promise<LeaveResponse> => {
   try {
-    const response = await api.post<LeaveResponse>('/leave.php?action=withdraw', { leave_id });
+    const response = await api.post<LeaveResponse>(
+      "/leave.php?action=withdraw",
+      { leave_id },
+    );
 
     if (response.data.error) {
       throw new Error(response.data.error);
@@ -74,8 +79,7 @@ export const withdrawLeave = async (leave_id: number): Promise<LeaveResponse> =>
 
     return response.data;
   } catch (error) {
-    console.error('Error withdrawing leave application:', error);
+    console.error("Error withdrawing leave application:", error);
     throw error;
   }
 };
-

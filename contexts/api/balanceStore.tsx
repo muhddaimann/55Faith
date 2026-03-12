@@ -14,6 +14,7 @@ export const useBalanceStore = create<BalanceStore>((set, get) => ({
   balanceLoading: false,
   isInitialized: false,
   fetchBalance: async (force = false) => {
+    if (get().balanceLoading) return;
     if (get().isInitialized && !force) return;
     
     set({ balanceLoading: true });

@@ -24,30 +24,41 @@ export function OverlayModal({
   const theme = useTheme();
   const tokens = useDesign();
 
+  const [shouldRender, setShouldRender] = React.useState(visible);
   const opacity = React.useRef(new Animated.Value(0)).current;
   const scale = React.useRef(new Animated.Value(0.95)).current;
 
   React.useEffect(() => {
     if (visible) {
+      setShouldRender(true);
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 180,
+          duration: 200,
           useNativeDriver: true,
         }),
         Animated.spring(scale, {
           toValue: 1,
-          friction: 6,
+          friction: 8,
+          tension: 40,
           useNativeDriver: true,
         }),
       ]).start();
     } else {
-      opacity.setValue(0);
-      scale.setValue(0.95);
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setShouldRender(false);
+          scale.setValue(0.95);
+        }
+      });
     }
   }, [visible]);
 
-  if (!visible) return null;
+  if (!shouldRender && !visible) return null;
 
   return (
     <Portal>

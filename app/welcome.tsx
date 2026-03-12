@@ -19,22 +19,18 @@ export default function Welcome() {
   } = useHome();
 
   const {
-    refreshLeaveData
   } = useLeave();
 
   useEffect(() => {
     const prepareDashboard = async () => {
       const startTime = Date.now();
       
-      // Fetch all essential data in parallel
       await Promise.allSettled([
-        refreshLeaveData(),
         fetchBroadcasts(),
         fetchBookings(),
         fetchRooms()
       ]);
 
-      // Ensure the user sees the welcome screen for at least 1.5 seconds for a smooth transition
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, 1500 - elapsed);
 
@@ -44,7 +40,7 @@ export default function Welcome() {
     };
 
     prepareDashboard();
-  }, [refreshLeaveData, fetchBroadcasts, fetchBookings, fetchRooms]);
+  }, [fetchBroadcasts, fetchBookings, fetchRooms]);
 
   return (
     <View

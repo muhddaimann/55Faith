@@ -30,6 +30,7 @@ export default function PickerModal({
     <View
       style={{
         gap: hasTitle ? tokens.spacing.md : tokens.spacing.sm,
+        maxHeight: 400,
       }}
     >
       {hasTitle && (
@@ -47,7 +48,8 @@ export default function PickerModal({
       <FlatList
         data={items}
         keyExtractor={(_, index) => index.toString()}
-        scrollEnabled={false}
+        scrollEnabled={true}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           gap: tokens.spacing.xs,
           marginTop: hasTitle ? 0 : tokens.spacing.xs,

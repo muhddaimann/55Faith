@@ -40,14 +40,13 @@ export default function Home() {
   const {
     leave,
     loading: leaveLoading,
-    refreshLeaveData: refreshLeave,
   } = useLeave();
 
   const loading = homeLoading || leaveLoading;
 
   const refreshHomeData = useCallback(async () => {
-    await Promise.allSettled([refreshHome(), refreshLeave()]);
-  }, [refreshHome, refreshLeave]);
+    await refreshHome();
+  }, [refreshHome]);
 
   // Consistent global loader for initial data fetch
   React.useEffect(() => {

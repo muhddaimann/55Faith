@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { OverlayAlert } from "../components/alert";
 import { OverlayConfirm } from "../components/confirm";
 import { OverlayToast, ToastVariant } from "../components/toast";
@@ -53,7 +60,9 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
 
   // Confirm State
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [confirmConfig, setConfirmConfig] = useState<ConfirmOptions | null>(null);
+  const [confirmConfig, setConfirmConfig] = useState<ConfirmOptions | null>(
+    null,
+  );
 
   // Toast State
   const [toastVisible, setToastVisible] = useState(false);
@@ -62,6 +71,7 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
   const [modalConfig, setModalConfig] = useState<ModalOptions | null>(null);
+  const modalConfigRef = useRef<ModalOptions | null>(null);
 
   const alert = useCallback((options: AlertOptions) => {
     setAlertConfig(options);
@@ -83,14 +93,17 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showModal = useCallback((options: ModalOptions) => {
+    modalConfigRef.current = options;
     setModalConfig(options);
     setModalVisible(true);
   }, []);
 
   const hideModal = useCallback(() => {
     setModalVisible(false);
-    modalConfig?.onDismiss?.();
-  }, [modalConfig]);
+    if (modalConfigRef.current?.onDismiss) {
+      modalConfigRef.current.onDismiss();
+    }
+  }, []);
 
   const handleAlertClose = () => {
     setAlertVisible(false);
@@ -107,11 +120,16 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
     confirmConfig?.onCancel?.();
   };
 
+  const value = useMemo(
+    () => ({ alert, confirm, toast, showModal, hideModal }),
+    [alert, confirm, toast, showModal, hideModal],
+  );
+
   return (
-    <OverlayContext.Provider value={{ alert, confirm, toast, showModal, hideModal }}>
+    <OverlayContext.Provider value={value}>
       {children}
-      
-      <OverlayAlert 
+
+      <OverlayAlert
         visible={alertVisible}
         title={alertConfig?.title}
         message={alertConfig?.message}
@@ -119,7 +137,7 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         onClose={handleAlertClose}
       />
 
-      <OverlayConfirm 
+      <OverlayConfirm
         visible={confirmVisible}
         title={confirmConfig?.title}
         message={confirmConfig?.message}
@@ -130,16 +148,16 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         isDestructive={confirmConfig?.isDestructive}
       />
 
-      <OverlayModal 
+      <OverlayModal
         visible={modalVisible}
         content={modalConfig?.content}
         onDismiss={hideModal}
         dismissable={modalConfig?.dismissable}
       />
 
-      <OverlayToast 
+      <OverlayToast
         visible={toastVisible}
-        message={toastConfig?.message || ''}
+        message={toastConfig?.message || ""}
         actionLabel={toastConfig?.actionLabel}
         onAction={toastConfig?.onAction}
         onDismiss={() => setToastVisible(false)}
@@ -147,7 +165,6 @@ export function OverlayProvider({ children }: { children: React.ReactNode }) {
         variant={toastConfig?.variant}
         icon={toastConfig?.icon}
       />
-
     </OverlayContext.Provider>
   );
 }

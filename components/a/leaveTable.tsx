@@ -1,31 +1,52 @@
-import React, { useState, useMemo } from "react";
-import { View, Pressable } from "react-native";
+import React, { useState, useMemo, useEffect } from "react";
+import { View, Pressable, FlatList } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
-import { Leave } from "../../contexts/api/leave";
+import { useOverlay } from "../../contexts/overlayContext";
+import { useLeaveStore } from "../../contexts/api/leaveStore";
+import { useBalanceStore } from "../../contexts/api/balanceStore";
+import { useLoader } from "../../contexts/loaderContext";
+import { LeaveItem } from "../../constants/leave";
 import LeaveCard from "./leaveCard";
+import LeaveModalContent from "./leaveModal";
 import NoData from "../noData";
 
 type Props = {
-  leaves: Leave[];
-  pending: Leave[];
-  approved: Leave[];
-  rejected: Leave[];
-  onLeavePress: (leave: Leave) => void;
+  history: LeaveItem[];
 };
 
 type FilterValue = "all" | "pending" | "approved" | "rejected";
 
-function LeaveTable({ 
-  leaves, 
-  pending, 
-  approved, 
-  rejected, 
-  onLeavePress 
-}: Props) {
+export default function LeaveTable({ history }: Props) {
   const theme = useTheme();
   const tokens = useDesign();
+  const { showModal, hideModal, confirm, toast } = useOverlay();
+  const { showLoader, hideLoader } = useLoader();
+  const withdraw = useLeaveStore((s) => s.withdraw);
+  const fetchBalance = useBalanceStore((s) => s.fetchBalance);
   const [filter, setFilter] = useState<FilterValue>("all");
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!ready && history.length > 0) {
+      showLoader();
+    }
+
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        setReady(true);
+        hideLoader();
+      }
+    }, 150);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      hideLoader();
+    };
+  }, [ready, history.length, showLoader, hideLoader]);
 
   const tabs: { label: string; value: FilterValue }[] = [
     { label: "All", value: "all" },
@@ -34,33 +55,57 @@ function LeaveTable({
     { label: "Rejected", value: "rejected" },
   ];
 
-  const filteredLeaves = useMemo(() => {
-    switch (filter) {
-      case "pending": return pending;
-      case "approved": return approved;
-      case "rejected": return rejected;
-      default: return leaves;
-    }
-  }, [filter, leaves, pending, approved, rejected]);
+  const filtered = useMemo(() => {
+    if (filter === "all") return history;
+    return history.filter((item) => item.status.toLowerCase() === filter);
+  }, [filter, history]);
 
-  const getEmptyState = () => {
-    const title = filter === "all" ? "No Applications" : `No ${filter.charAt(0).toUpperCase() + filter.slice(1)} Applications`;
-    const message = filter === "all" 
-      ? "You haven't submitted any leave applications yet." 
-      : `You don't have any leave applications with ${filter} status.`;
-    
-    return { title, message };
+  const handleWithdraw = async (item: LeaveItem) => {
+    hideModal();
+
+    confirm({
+      title: "Withdraw Leave",
+      message: "Are you sure you want to withdraw this application?",
+      onConfirm: async () => {
+        showLoader("Withdrawing...");
+        const result = await withdraw(Number(item.id));
+        if (result.success) {
+          await fetchBalance();
+          toast({ message: "Withdrawn successfully", variant: "success" });
+        } else {
+          toast({
+            message: result.error || "Failed to withdraw",
+            variant: "error",
+          });
+        }
+        hideLoader();
+      },
+    });
   };
 
+  const onLeavePress = (item: LeaveItem) => {
+    showModal({
+      content: (
+        <LeaveModalContent
+          leave={item.raw}
+          onWithdraw={() => handleWithdraw(item)}
+        />
+      ),
+    });
+  };
+
+  if (!ready) {
+    return null;
+  }
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ gap: tokens.spacing.md }}>
       <View
         style={{
           flexDirection: "row",
           backgroundColor: theme.colors.surfaceVariant,
           borderRadius: tokens.radii.lg,
-          padding: 4,
-          marginBottom: tokens.spacing.md,
+          padding: tokens.spacing.xxs,
         }}
       >
         {tabs.map((tab) => {
@@ -74,14 +119,17 @@ function LeaveTable({
                 paddingVertical: 8,
                 alignItems: "center",
                 borderRadius: tokens.radii.md,
-                backgroundColor: isActive ? theme.colors.surface : "transparent",
-                elevation: isActive ? 2 : 0,
+                backgroundColor: isActive
+                  ? theme.colors.surface
+                  : "transparent",
               }}
             >
               <Text
                 variant="labelLarge"
                 style={{
-                  color: isActive ? theme.colors.primary : theme.colors.onSurfaceVariant,
+                  color: isActive
+                    ? theme.colors.primary
+                    : theme.colors.onSurfaceVariant,
                   fontWeight: isActive ? "700" : "500",
                 }}
               >
@@ -92,25 +140,29 @@ function LeaveTable({
         })}
       </View>
 
-      <View style={{ flex: 1 }}>
-        {filteredLeaves.length === 0 ? (
-          <NoData 
-            title={getEmptyState().title}
-            message={getEmptyState().message}
-            icon="calendar-blank"
-          />
-        ) : (
-          filteredLeaves.map((leave) => (
-            <LeaveCard
-              key={leave.leave_id}
-              leave={leave}
-              onPress={onLeavePress}
-            />
-          ))
-        )}
-      </View>
+      {filtered.length === 0 ? (
+        <NoData
+          title="No Applications"
+          message={`No ${filter} leave records found.`}
+          icon="calendar-blank"
+        />
+      ) : (
+        <FlatList
+          data={filtered}
+          renderItem={({ item }) => (
+            <LeaveCard item={item} onPress={() => onLeavePress(item)} />
+          )}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          ItemSeparatorComponent={() => (
+            <View style={{ height: tokens.spacing.sm }} />
+          )}
+          initialNumToRender={5}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+        />
+      )}
     </View>
   );
 }
-
-export default React.memo(LeaveTable);

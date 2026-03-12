@@ -1,58 +1,52 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View } from "react-native";
 import { Text, Card, Chip, useTheme, Divider } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
-import { Leave } from "../../contexts/api/leave";
+import { LeaveItem } from "../../constants/leave";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type Props = {
-  leave: Leave;
-  onPress: (leave: Leave) => void;
+  item: LeaveItem;
+  onPress: (item: LeaveItem) => void;
 };
 
-export default React.memo(function LeaveCard({ leave, onPress }: Props) {
-  const theme = useTheme();
+export default React.memo(function LeaveCard({ item, onPress }: Props) {
+  const { colors } = useTheme();
   const tokens = useDesign();
 
-  const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
+  const statusStyle = useMemo(() => {
+    switch (item.status) {
+      case "APPROVED":
         return {
-          bg: theme.colors.tertiaryContainer,
-          text: theme.colors.onTertiaryContainer,
-          icon: "check-circle",
+          bg: colors.tertiaryContainer,
+          text: colors.onTertiaryContainer,
         };
-      case "pending":
+      case "PENDING":
         return {
-          bg: theme.colors.primaryContainer,
-          text: theme.colors.onPrimaryContainer,
-          icon: "timer-sand",
+          bg: colors.primaryContainer,
+          text: colors.onPrimaryContainer,
         };
-      case "rejected":
+      case "REJECTED":
         return {
-          bg: theme.colors.errorContainer,
-          text: theme.colors.onErrorContainer,
-          icon: "close-circle",
+          bg: colors.errorContainer,
+          text: colors.onErrorContainer,
         };
       default:
         return {
-          bg: theme.colors.surfaceVariant,
-          text: theme.colors.onSurfaceVariant,
-          icon: "help-circle",
+          bg: colors.surfaceDisabled,
+          text: colors.onSurfaceDisabled,
         };
     }
-  };
-
-  const statusStyle = getStatusStyle(leave.manager_status);
+  }, [item.status, colors]);
 
   return (
     <Card
-      mode="elevated"
-      onPress={() => onPress(leave)}
+      mode="contained"
+      onPress={() => onPress(item)}
       style={{
-        marginBottom: tokens.spacing.md,
         borderRadius: tokens.radii.lg,
-        backgroundColor: theme.colors.surface,
+        backgroundColor: colors.surface,
+        elevation: 2,
       }}
     >
       <View style={{ padding: tokens.spacing.md }}>
@@ -79,26 +73,26 @@ export default React.memo(function LeaveCard({ leave, onPress }: Props) {
                 borderRadius: 18,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: theme.colors.primaryContainer,
+                backgroundColor: colors.primaryContainer,
               }}
             >
               <MaterialCommunityIcons
                 name="calendar-text"
                 size={20}
-                color={theme.colors.primary}
+                color={colors.primary}
               />
             </View>
 
-            <View>
+            <View style={{ flex: 1 }}>
               <Text variant="titleMedium" style={{ fontWeight: "700" }}>
-                {leave.leave_name}
+                {item.name}
               </Text>
 
               <Text
                 variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
+                style={{ color: colors.onSurfaceVariant }}
               >
-                {leave.duration_name}
+                {item.durationLabel}
               </Text>
             </View>
           </View>
@@ -106,9 +100,9 @@ export default React.memo(function LeaveCard({ leave, onPress }: Props) {
           <Chip
             compact
             style={{ backgroundColor: statusStyle.bg }}
-            textStyle={{ color: statusStyle.text, fontSize: 11 }}
+            textStyle={{ color: statusStyle.text, fontSize: 10, fontWeight: "700" }}
           >
-            {leave.manager_status}
+            {item.statusMeta.label}
           </Chip>
         </View>
 
@@ -131,43 +125,44 @@ export default React.memo(function LeaveCard({ leave, onPress }: Props) {
             <MaterialCommunityIcons
               name="calendar-range"
               size={14}
-              color={theme.colors.onSurfaceVariant}
+              color={colors.onSurfaceVariant}
             />
 
             <Text
               variant="bodySmall"
               style={{
                 opacity: 0.8,
-                color: theme.colors.onSurfaceVariant,
+                color: colors.onSurfaceVariant,
               }}
             >
-              {leave.date}
+              {item.dateRangeLabel}
             </Text>
           </View>
 
-          {leave.reason && (
+          {item.raw.reason && (
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: tokens.spacing.xs,
+                flex: 1,
               }}
             >
               <MaterialCommunityIcons
                 name="comment-text-outline"
                 size={14}
-                color={theme.colors.onSurfaceVariant}
+                color={colors.onSurfaceVariant}
               />
 
               <Text
                 variant="bodySmall"
                 style={{
                   opacity: 0.8,
-                  color: theme.colors.onSurfaceVariant,
+                  color: colors.onSurfaceVariant,
                 }}
                 numberOfLines={1}
               >
-                {leave.reason}
+                {item.raw.reason}
               </Text>
             </View>
           )}

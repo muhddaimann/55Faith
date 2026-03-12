@@ -1,10 +1,6 @@
 import { create } from "zustand";
-import {
-  getLeave,
-  addLeave,
-  withdrawLeave,
-  type Leave,
-} from "./leave";
+import { getLeave, addLeave, withdrawLeave } from "./leave";
+import { transformLeave, type LeaveItem } from "../../constants/leave";
 
 export type StoreActionResponse = {
   success: boolean;
@@ -13,7 +9,7 @@ export type StoreActionResponse = {
 };
 
 type LeaveStore = {
-  leaves: Leave[];
+  leaves: LeaveItem[];
   loading: boolean;
   submitting: boolean;
   submissionError: string | null;
@@ -33,7 +29,10 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     set({ loading: true });
     try {
       const data = await getLeave();
-      set({ leaves: data });
+      const formatted = data.map(transformLeave);
+      set({ leaves: formatted });
+    } catch (e) {
+      console.error("Error fetching leaves:", e);
     } finally {
       set({ loading: false });
     }
@@ -68,12 +67,10 @@ export const useLeaveStore = create<LeaveStore>((set, get) => ({
     set({ submitting: true, submissionError: null });
     try {
       const res = await withdrawLeave(id);
-      // Explicitly check for an error property in the response
       if (res.error) {
         set({ submissionError: res.error });
         return { success: false, error: res.error };
       }
-      // On success, refetch the leaves and return a success response
       await get().fetchLeaves();
       return { success: true, message: res.message };
     } catch (e: any) {
