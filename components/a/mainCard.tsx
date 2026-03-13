@@ -18,14 +18,16 @@ export default function MainCard() {
     holiday,
     start,
     end,
-    toggleStatus,
-    toggleStaffType,
-    toggleHoliday,
+    actualLogin,
+    actualLogout,
+    loginConfig,
+    logoutConfig,
     staffType,
     isPublicHoliday,
     showStatus,
     showWorkingHours,
     message,
+    refreshData,
   } = useMain();
 
   const canNavigate = staffType === "operation";
@@ -61,7 +63,7 @@ export default function MainCard() {
 
         <View style={{ flexDirection: "row", gap: tokens.spacing.sm }}>
           <Pressable
-            onPress={toggleStaffType}
+            onPress={refreshData}
             style={({ pressed }) => ({
               width: 40,
               height: 40,
@@ -73,36 +75,9 @@ export default function MainCard() {
             })}
           >
             <MaterialCommunityIcons
-              name={
-                staffType === "operation"
-                  ? "account-hard-hat"
-                  : "briefcase-account"
-              }
+              name="refresh"
               size={22}
               color={colors.primary}
-            />
-          </Pressable>
-
-          <Pressable
-            onPress={toggleHoliday}
-            style={({ pressed }) => ({
-              width: 40,
-              height: 40,
-              borderRadius: tokens.radii.full,
-              backgroundColor: isPublicHoliday
-                ? colors.tertiaryContainer
-                : colors.surfaceVariant,
-              alignItems: "center",
-              justifyContent: "center",
-              transform: [{ scale: pressed ? 0.95 : 1 }],
-            })}
-          >
-            <MaterialCommunityIcons
-              name="calendar-star"
-              size={22}
-              color={
-                isPublicHoliday ? colors.onTertiaryContainer : colors.primary
-              }
             />
           </Pressable>
 
@@ -158,107 +133,168 @@ export default function MainCard() {
         </View>
       )}
 
-      {showStatus &&
-        (staffType === "operation" ? (
-          <Pressable
-            onPress={toggleStatus}
-            style={({ pressed }) => ({
-              backgroundColor: current.bg,
-              borderRadius: tokens.radii.lg,
-              paddingVertical: tokens.spacing.sm,
-              paddingHorizontal: tokens.spacing.md,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: tokens.spacing.sm,
-              opacity: pressed ? 0.9 : 1,
-            })}
-          >
-            <MaterialCommunityIcons
-              name={current.icon as any}
-              size={18}
-              color={current.color}
-            />
-            <Text
-              variant="bodyMedium"
-              style={{
-                fontWeight: "600",
-                color: current.color,
-              }}
-            >
-              {current.label}
-            </Text>
-          </Pressable>
-        ) : (
-          <View
+      {showStatus && (
+        <View
+          style={{
+            backgroundColor: current.bg,
+            borderRadius: tokens.radii.lg,
+            paddingVertical: tokens.spacing.sm,
+            paddingHorizontal: tokens.spacing.md,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: tokens.spacing.sm,
+          }}
+        >
+          <MaterialCommunityIcons
+            name={current.icon as any}
+            size={18}
+            color={current.color}
+          />
+          <Text
+            variant="bodyMedium"
             style={{
-              backgroundColor: current.bg,
-              borderRadius: tokens.radii.lg,
-              paddingVertical: tokens.spacing.sm,
-              paddingHorizontal: tokens.spacing.md,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: tokens.spacing.sm,
+              fontWeight: "600",
+              color: current.color,
             }}
           >
-            <MaterialCommunityIcons
-              name={current.icon as any}
-              size={18}
-              color={current.color}
-            />
-            <Text
-              variant="bodyMedium"
-              style={{
-                fontWeight: "600",
-                color: current.color,
-              }}
-            >
-              {current.label}
-            </Text>
-          </View>
-        ))}
+            {current.label}
+          </Text>
+        </View>
+      )}
+
       {showWorkingHours ? (
-        <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: colors.surfaceVariant,
-              borderRadius: tokens.radii.lg,
-              paddingVertical: tokens.spacing.sm,
-              paddingHorizontal: tokens.spacing.md,
-              gap: 2,
-            }}
-          >
-            <Text
-              variant="bodySmall"
-              style={{ color: colors.onSurfaceVariant }}
+        <View style={{ gap: tokens.spacing.md }}>
+          <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: colors.surfaceVariant,
+                borderRadius: tokens.radii.lg,
+                paddingVertical: tokens.spacing.sm,
+                paddingHorizontal: tokens.spacing.md,
+                gap: 2,
+              }}
             >
-              Start
-            </Text>
-            <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-              {start}
-            </Text>
+              <Text
+                variant="bodySmall"
+                style={{ color: colors.onSurfaceVariant }}
+              >
+                Shift Start
+              </Text>
+              <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+                {start}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: colors.surfaceVariant,
+                borderRadius: tokens.radii.lg,
+                paddingVertical: tokens.spacing.sm,
+                paddingHorizontal: tokens.spacing.md,
+                gap: 2,
+              }}
+            >
+              <Text
+                variant="bodySmall"
+                style={{ color: colors.onSurfaceVariant }}
+              >
+                Shift End
+              </Text>
+              <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
+                {end}
+              </Text>
+            </View>
           </View>
 
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: colors.surfaceVariant,
-              borderRadius: tokens.radii.lg,
-              paddingVertical: tokens.spacing.sm,
-              paddingHorizontal: tokens.spacing.md,
-              gap: 2,
-            }}
-          >
-            <Text
-              variant="bodySmall"
-              style={{ color: colors.onSurfaceVariant }}
-            >
-              End
-            </Text>
-            <Text variant="bodyMedium" style={{ fontWeight: "600" }}>
-              {end}
-            </Text>
-          </View>
+          {staffType === "operation" && (actualLogin || actualLogout) && (
+            <View style={{ flexDirection: "row", gap: tokens.spacing.md }}>
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: loginConfig?.bg || colors.surfaceVariant,
+                  borderRadius: tokens.radii.lg,
+                  paddingVertical: tokens.spacing.sm,
+                  paddingHorizontal: tokens.spacing.md,
+                  gap: 2,
+                }}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: loginConfig?.onBg || colors.onSurfaceVariant }}
+                  >
+                    Check In
+                  </Text>
+                  {loginConfig?.label && (
+                    <Text
+                      variant="labelSmall"
+                      style={{ color: loginConfig.color, fontWeight: "700" }}
+                    >
+                      {loginConfig.label}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  variant="bodyMedium"
+                  style={{ 
+                    fontWeight: "600",
+                    color: loginConfig?.onBg || colors.onSurface 
+                  }}
+                >
+                  {actualLogin || "--:--"}
+                </Text>
+                {loginConfig?.diff && (
+                  <Text variant="labelSmall" style={{ color: loginConfig.color }}>
+                    {loginConfig.diff}
+                  </Text>
+                )}
+              </View>
+
+              <View
+                style={{
+                  flex: 1,
+                  backgroundColor: logoutConfig?.bg || colors.surfaceVariant,
+                  borderRadius: tokens.radii.lg,
+                  paddingVertical: tokens.spacing.sm,
+                  paddingHorizontal: tokens.spacing.md,
+                  gap: 2,
+                }}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: logoutConfig?.onBg || colors.onSurfaceVariant }}
+                  >
+                    Check Out
+                  </Text>
+                  {logoutConfig?.label && (
+                    <Text
+                      variant="labelSmall"
+                      style={{ color: logoutConfig.color, fontWeight: "700" }}
+                    >
+                      {logoutConfig.label}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  variant="bodyMedium"
+                  style={{ 
+                    fontWeight: "600",
+                    color: logoutConfig?.onBg || colors.onSurface 
+                  }}
+                >
+                  {actualLogout || "--:--"}
+                </Text>
+                {logoutConfig?.diff && (
+                  <Text variant="labelSmall" style={{ color: logoutConfig.color }}>
+                    {logoutConfig.diff}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
         </View>
       ) : (
         message !== "" && (

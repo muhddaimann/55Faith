@@ -25,6 +25,7 @@ export default function MainCalendar({
     off_day: theme.colors.secondary,
     public_holiday: theme.colors.tertiary ?? theme.colors.secondary,
     leave: theme.colors.error,
+    absent: theme.colors.error,
   };
 
   const markedDates: any = {};
@@ -92,7 +93,9 @@ export default function MainCalendar({
         elevation: 2,
       }}
       contentStyle={{
-        padding: tokens.spacing.lg,
+        paddingTop: tokens.spacing.sm,
+        paddingBottom: tokens.spacing.md,
+        paddingHorizontal: tokens.spacing.lg,
       }}
     >
       <Calendar

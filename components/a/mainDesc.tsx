@@ -33,7 +33,7 @@ export default function MainDescription({ record }: Props) {
       onBg: colors.onPrimaryContainer,
     },
     off_day: {
-      label: "Off Day",
+      label: record.apiStatus === "RD" ? "Rest Day" : "Off Day",
       icon: "weather-night",
       color: colors.secondary,
       bg: colors.secondaryContainer,
@@ -53,9 +53,18 @@ export default function MainDescription({ record }: Props) {
       bg: colors.errorContainer,
       onBg: colors.onErrorContainer,
     },
+    absent: {
+      label: "Absent",
+      icon: "alert-circle",
+      color: colors.error,
+      bg: colors.errorContainer,
+      onBg: colors.onErrorContainer,
+    },
   };
 
-  const config = statusConfig[record.status];
+  const config = record.holidayName
+    ? statusConfig.public_holiday
+    : statusConfig[record.status] || statusConfig.off_day;
 
   const dateObj = new Date(record.date);
   const formattedDate = dateObj.toLocaleDateString("en-GB", {
@@ -66,7 +75,21 @@ export default function MainDescription({ record }: Props) {
 
   const worked =
     record.status === "on_duty" ||
-    (record.status === "public_holiday" && record.checkIn);
+    (record.holidayName && record.checkIn) ||
+    (record.status === "absent" && record.checkIn);
+
+  const getStatusColor = (status?: string) => {
+    if (!status) return colors.onSurfaceVariant;
+    const s = status.toLowerCase();
+    if (s === "late") return colors.error;
+    if (s === "early" || s === "exact") return colors.primary;
+    return colors.onSurfaceVariant;
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status || status === "false") return "";
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
 
   return (
     <Card
@@ -76,7 +99,7 @@ export default function MainDescription({ record }: Props) {
         backgroundColor: colors.surface,
       }}
     >
-      <Card.Content style={{ gap: tokens.spacing.lg }}>
+      <Card.Content style={{ gap: tokens.spacing.sm }}>
         <View
           style={{
             flexDirection: "row",
@@ -113,7 +136,32 @@ export default function MainDescription({ record }: Props) {
           </View>
         </View>
 
-        {worked && (
+        {record.holidayName && (
+          <View
+            style={{
+              backgroundColor: config.bg,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radii.lg,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: tokens.spacing.sm,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="calendar-star"
+              size={20}
+              color={config.onBg}
+            />
+            <Text
+              variant="bodyMedium"
+              style={{ fontWeight: "700", color: config.onBg }}
+            >
+              {record.holidayName}
+            </Text>
+          </View>
+        )}
+
+        {worked ? (
           <View style={{ gap: tokens.spacing.md }}>
             {(record.shiftStart || record.shiftEnd) && (
               <View
@@ -146,15 +194,36 @@ export default function MainDescription({ record }: Props) {
                   gap: 2,
                 }}
               >
-                <Text
-                  variant="labelSmall"
-                  style={{ color: colors.onSurfaceVariant }}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  Check In
-                </Text>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: colors.onSurfaceVariant }}
+                  >
+                    Check In
+                  </Text>
+                  <Text
+                    variant="labelSmall"
+                    style={{
+                      color: getStatusColor(record.loginStatus),
+                      fontWeight: "700",
+                    }}
+                  >
+                    {getStatusLabel(record.loginStatus)}
+                  </Text>
+                </View>
                 <Text variant="titleMedium" style={{ fontWeight: "700" }}>
                   {record.checkIn || "--:--"}
                 </Text>
+                {record.lateMinutes ? (
+                  <Text variant="labelSmall" style={{ color: colors.error }}>
+                    {record.lateMinutes} mins late
+                  </Text>
+                ) : null}
               </View>
 
               <View
@@ -166,17 +235,69 @@ export default function MainDescription({ record }: Props) {
                   gap: 2,
                 }}
               >
-                <Text
-                  variant="labelSmall"
-                  style={{ color: colors.onSurfaceVariant }}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  Check Out
-                </Text>
+                  <Text
+                    variant="labelSmall"
+                    style={{ color: colors.onSurfaceVariant }}
+                  >
+                    Check Out
+                  </Text>
+                  {record.logoutDifference && (
+                    <Text
+                      variant="labelSmall"
+                      style={{
+                        color: getStatusColor(record.logoutStatus),
+                        fontWeight: "700",
+                      }}
+                    >
+                      {getStatusLabel(record.logoutStatus)}
+                    </Text>
+                  )}
+                </View>
                 <Text variant="titleMedium" style={{ fontWeight: "700" }}>
                   {record.checkOut || "--:--"}
                 </Text>
+                {record.overtimeMinutes && record.logoutDifference ? (
+                  <Text variant="labelSmall" style={{ color: colors.primary }}>
+                    {record.overtimeMinutes} mins OT
+                  </Text>
+                ) : null}
               </View>
             </View>
+          </View>
+        ) : (
+          <View
+            style={{
+              backgroundColor: colors.surfaceVariant,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radii.lg,
+            }}
+          >
+            <Text
+              variant="bodyMedium"
+              style={{
+                color: colors.onSurfaceVariant,
+                textAlign: "center",
+                fontStyle: "italic",
+              }}
+            >
+              {record.holidayName
+                ? record.holidayName
+                : record.status === "off_day"
+                  ? record.apiStatus === "RD"
+                    ? "Today is a scheduled rest day."
+                    : "Enjoy your day off."
+                  : record.status === "leave"
+                    ? "You’re currently on leave."
+                    : record.status === "absent"
+                      ? "No attendance recorded for this work day."
+                      : "No schedule for this date."}
+            </Text>
           </View>
         )}
 
