@@ -4,11 +4,13 @@ import { useTheme, Text } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useHome } from "../../hooks/useHome";
+import { useRouter } from "expo-router";
 
 export default function Header() {
   const { colors } = useTheme();
   const tokens = useDesign();
   const { greeting, nickName, initials, designation } = useHome();
+  const router = useRouter();
 
   return (
     <View
@@ -47,6 +49,7 @@ export default function Header() {
         }}
       >
         <Pressable
+          onPress={() => router.push("/a/newsflash")}
           style={({ pressed }) => ({
             width: 40,
             height: 40,

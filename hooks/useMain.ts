@@ -233,7 +233,7 @@ export function useMain() {
     });
   }, []);
 
-  const roleLabel = staffType === "operation" ? "CD Agent" : "Management";
+  const roleLabel = staffType === "operation" ? "Operation" : "Management";
 
   return {
     staffType,

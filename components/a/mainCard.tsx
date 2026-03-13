@@ -63,25 +63,6 @@ export default function MainCard() {
 
         <View style={{ flexDirection: "row", gap: tokens.spacing.sm }}>
           <Pressable
-            onPress={refreshData}
-            style={({ pressed }) => ({
-              width: 40,
-              height: 40,
-              borderRadius: tokens.radii.full,
-              backgroundColor: colors.surfaceVariant,
-              alignItems: "center",
-              justifyContent: "center",
-              transform: [{ scale: pressed ? 0.95 : 1 }],
-            })}
-          >
-            <MaterialCommunityIcons
-              name="refresh"
-              size={22}
-              color={colors.primary}
-            />
-          </Pressable>
-
-          <Pressable
             disabled={!canNavigate}
             onPress={() => canNavigate && router.push("a/main")}
             style={({ pressed }) => ({
