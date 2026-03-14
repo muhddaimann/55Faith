@@ -4,12 +4,14 @@ import { useTheme, Text } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useDesign } from "../contexts/designContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useStaffStore } from "../contexts/api/staffStore";
 
 type HeaderProps = {
   title: string;
   subtitle?: string;
   rightSlot?: React.ReactNode;
   showBack?: boolean;
+  showProfile?: boolean;
 };
 
 export default function Header({
@@ -17,10 +19,41 @@ export default function Header({
   subtitle,
   rightSlot,
   showBack = true,
+  showProfile = false,
 }: HeaderProps) {
   const { colors } = useTheme();
   const tokens = useDesign();
   const router = useRouter();
+  const staff = useStaffStore((s) => s.staff);
+
+  const renderRight = () => {
+    if (rightSlot) return rightSlot;
+    if (showProfile && staff) {
+      return (
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: tokens.radii.full,
+            backgroundColor: colors.primary,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            variant="labelLarge"
+            style={{
+              color: colors.onPrimary,
+              fontWeight: "700",
+            }}
+          >
+            {staff.initials}
+          </Text>
+        </View>
+      );
+    }
+    return <View style={{ width: 36 }} />;
+  };
 
   return (
     <View
@@ -64,7 +97,7 @@ export default function Header({
         )}
       </View>
 
-      <View style={{ minWidth: 40, alignItems: "flex-end" }}>{rightSlot}</View>
+      <View style={{ minWidth: 40, alignItems: "flex-end" }}>{renderRight()}</View>
     </View>
   );
 }

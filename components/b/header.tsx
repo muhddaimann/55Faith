@@ -3,11 +3,16 @@ import { View } from "react-native";
 import { useTheme, Text, Button } from "react-native-paper";
 import { useDesign } from "../../contexts/designContext";
 import { useRouter } from "expo-router";
+import { useHome } from "../../hooks/useHome";
 
 export default function SettingsHeader() {
   const { colors } = useTheme();
   const tokens = useDesign();
   const router = useRouter();
+  const { staff, initials, designation } = useHome();
+
+  const nickName = staff?.nick_name || "User";
+  const staffNo = staff?.staff_no || "";
 
   return (
     <View
@@ -31,13 +36,13 @@ export default function SettingsHeader() {
         }}
       >
         <Text
-          variant="titleMedium"
+          variant="headlineSmall"
           style={{
             color: colors.onPrimary,
             fontWeight: "700",
           }}
         >
-          AF
+          {initials}
         </Text>
       </View>
 
@@ -47,15 +52,34 @@ export default function SettingsHeader() {
           gap: 2,
         }}
       >
-        <Text
-          variant="titleMedium"
+        <View
           style={{
-            fontWeight: "600",
-            textAlign: "center",
+            flexDirection: "row",
+            alignItems: "baseline",
+            gap: 6,
           }}
         >
-          Adam Faizal Bin Rahman
-        </Text>
+          <Text
+            variant="headlineMedium"
+            style={{
+              fontWeight: "700",
+            }}
+          >
+            {nickName}
+          </Text>
+
+          {staffNo ? (
+            <Text
+              variant="labelLarge"
+              style={{
+                color: colors.primary,
+                fontWeight: "600",
+              }}
+            >
+              #{staffNo}
+            </Text>
+          ) : null}
+        </View>
 
         <Text
           variant="bodySmall"
@@ -64,9 +88,10 @@ export default function SettingsHeader() {
             textAlign: "center",
           }}
         >
-          Software Engineer · IT Department
+          {designation || "Staff Position"}
         </Text>
       </View>
+
       <Button
         mode="outlined"
         icon="account-edit-outline"

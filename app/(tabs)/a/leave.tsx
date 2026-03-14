@@ -51,6 +51,7 @@ export default function LeavePage() {
           title="Leave Application"
           subtitle="Manage your leave requests"
           showBack
+          showProfile
         />
 
         <LeaveBody />

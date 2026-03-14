@@ -38,8 +38,6 @@ export const useBroadcastStore = create<BroadcastStore>((set, get) => ({
   isInitialized: false,
 
   fetchBroadcasts: async (force = false) => {
-    if (get().isInitialized && !force) return;
-
     set({ loading: true });
     try {
       const res = await getActiveBroadcasts();

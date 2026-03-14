@@ -1,9 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { ScrollView, View, RefreshControl } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import { useHome } from "../../../hooks/useHome";
+import { useLoader } from "../../../contexts/loaderContext";
 import Header from "../../../components/header";
 import NewsflashTable from "../../../components/a/newsflashTable";
 import NewsflashModalContent from "../../../components/a/newsflashModal";
@@ -17,6 +18,7 @@ export default function NewsflashPage() {
   const tokens = useDesign();
   const { setHideTabBar } = useTabs();
   const { showModal, hideModal, toast } = useOverlay();
+  const { showLoader, hideLoader } = useLoader();
 
   const {
     broadcasts,
@@ -27,6 +29,15 @@ export default function NewsflashPage() {
     refreshHomeData,
     acknowledge
   } = useHome();
+
+  useEffect(() => {
+    if (loading && broadcasts.length === 0) {
+      showLoader("Loading announcements...");
+    } else if (!loading) {
+      hideLoader();
+    }
+    return () => hideLoader();
+  }, [loading, broadcasts.length, showLoader, hideLoader]);
 
   const scrollViewRef = React.useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = React.useState(false);

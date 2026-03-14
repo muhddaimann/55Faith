@@ -1,16 +1,17 @@
 import { create } from "zustand";
-import { getStaffDetails, type StaffResponse } from "./staff";
+import { getStaffDetails, updateStaffDetails, type StaffResponse } from "./staff";
 
 type StaffStore = {
   staff: StaffResponse | null;
   loading: boolean;
   error: string | null;
   fetchStaff: () => Promise<void>;
+  updateStaff: (data: Partial<StaffResponse>) => Promise<{ success: boolean; error?: string }>;
   setStaff: (data: StaffResponse) => void;
   clear: () => void;
 };
 
-export const useStaffStore = create<StaffStore>((set) => ({
+export const useStaffStore = create<StaffStore>((set, get) => ({
   staff: null,
   loading: false,
   error: null,
@@ -27,6 +28,17 @@ export const useStaffStore = create<StaffStore>((set) => ({
       });
     } finally {
       set({ loading: false });
+    }
+  },
+
+  updateStaff: async (data) => {
+    try {
+      await updateStaffDetails(data);
+      const updated = await getStaffDetails();
+      set({ staff: updated });
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e?.message || "Failed to update staff." };
     }
   },
 

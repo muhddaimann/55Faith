@@ -54,8 +54,6 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   error: null,
 
   fetchBookings: async (force = false) => {
-    if (get().isInitialized && !force) return;
-    
     set({ loading: true, error: null });
     const res = await getMyBookingsApi();
     if ('error' in res) {
@@ -66,8 +64,6 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   fetchRooms: async (force = false) => {
-    if (get().isRoomsInitialized && !force) return;
-    
     set({ loading: true });
     const res = await getAllRoomsApi();
     if ('error' in res) {

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { useStaffStore } from "../contexts/api/staffStore";
 import { useBroadcastStore } from "../contexts/api/broadcastStore";
 import { useRoomStore } from "../contexts/api/roomStore";
@@ -23,6 +23,13 @@ export function useHome() {
   const roomLoading = useRoomStore((state) => state.loading);
   const cancelBooking = useRoomStore((state) => state.cancelBooking);
   const clearAvailability = useRoomStore((state) => state.clearAvailability);
+
+  // Preload and cache data
+  useEffect(() => {
+    fetchBroadcasts();
+    fetchBookings();
+    fetchRooms();
+  }, [fetchBroadcasts, fetchBookings, fetchRooms]);
 
   // Memoize greeting
   const greeting = useMemo(() => {

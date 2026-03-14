@@ -6,21 +6,22 @@ import {
   View,
   Pressable,
 } from "react-native";
-import { useTheme, Text, Card, Switch, Divider } from "react-native-paper";
+import { useTheme, Text, Card } from "react-native-paper";
 import { useDesign } from "../../../contexts/designContext";
 import { useTabs } from "../../../contexts/tabContext";
 import ScrollTop from "../../../components/scrollTop";
 import Header from "../../../components/b/header";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useHome } from "../../../hooks/useHome";
 
 export default function Settings() {
   const theme = useTheme();
   const tokens = useDesign();
   const { onScroll } = useTabs();
+  const { staff } = useHome();
 
   const scrollRef = useRef<ScrollView | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offset = e.nativeEvent.contentOffset.y;
@@ -40,7 +41,7 @@ export default function Settings() {
         scrollEventThrottle={16}
         style={{ flex: 1, backgroundColor: theme.colors.background }}
         contentContainerStyle={{
-          paddingBottom: tokens.spacing["3xl"],
+          paddingBottom: tokens.spacing["3xl"] * 2,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -72,9 +73,9 @@ export default function Settings() {
                 variant="bodySmall"
                 style={{ color: theme.colors.onSurfaceVariant }}
               >
-                Staff ID
+                Name
               </Text>
-              <Text variant="bodyMedium">EMP001245</Text>
+              <Text variant="bodyMedium">{staff?.full_name || "---"}</Text>
             </View>
 
             <View style={{ gap: tokens.spacing.xs }}>
@@ -84,7 +85,27 @@ export default function Settings() {
               >
                 Email
               </Text>
-              <Text variant="bodyMedium">adam.faizal@company.com</Text>
+              <Text variant="bodyMedium">{staff?.email || "---"}</Text>
+            </View>
+
+            <View style={{ gap: tokens.spacing.xs }}>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                Contact Number
+              </Text>
+              <Text variant="bodyMedium">{staff?.contact_no || "---"}</Text>
+            </View>
+
+            <View style={{ gap: tokens.spacing.xs }}>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                Address
+              </Text>
+              <Text variant="bodyMedium">{staff?.full_address || "---"}</Text>
             </View>
           </Card>
 
@@ -95,38 +116,6 @@ export default function Settings() {
               backgroundColor: theme.colors.surface,
             }}
           >
-            <View
-              style={{
-                paddingHorizontal: tokens.spacing.lg,
-                paddingVertical: tokens.spacing.md,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: tokens.spacing.md,
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="bell-outline"
-                  size={22}
-                  color={theme.colors.primary}
-                />
-                <Text variant="bodyMedium">Push Notifications</Text>
-              </View>
-
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-              />
-            </View>
-
-            <Divider />
-
             <Pressable
               style={{
                 paddingHorizontal: tokens.spacing.lg,
