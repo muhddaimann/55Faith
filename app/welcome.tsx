@@ -1,38 +1,31 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { Text, useTheme, ActivityIndicator } from "react-native-paper";
 import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
-import { useAuth } from "../contexts/authContext";
 import { useHome } from "../hooks/useHome";
 import useLeave from "../hooks/useLeave";
 
 export default function Welcome() {
   const theme = useTheme();
   const tokens = useDesign();
-  const { user } = useAuth();
-  
-  const { 
-    fetchBroadcasts, 
-    fetchBookings, 
-    fetchRooms 
-  } = useHome();
 
-  const {
-  } = useLeave();
+  const { fetchBroadcasts, fetchBookings, fetchRooms } = useHome();
+
+  const {} = useLeave();
 
   useEffect(() => {
     const prepareDashboard = async () => {
       const startTime = Date.now();
-      
+
       await Promise.allSettled([
         fetchBroadcasts(),
         fetchBookings(),
-        fetchRooms()
+        fetchRooms(),
       ]);
 
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 1500 - elapsed);
+      const remaining = Math.max(0, 1200 - elapsed);
 
       setTimeout(() => {
         router.replace("/(tabs)/a");
@@ -49,28 +42,45 @@ export default function Welcome() {
         backgroundColor: theme.colors.background,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: tokens.spacing.xl,
-        gap: tokens.spacing.lg,
+        paddingHorizontal: tokens.spacing.lg,
+        gap: tokens.spacing.md,
       }}
     >
+      <Image
+        source={require("../assets/images/d3.png")}
+        style={{
+          width: 64,
+          height: 64,
+          resizeMode: "contain",
+          marginBottom: tokens.spacing.sm,
+        }}
+      />
+
       <Text
-        variant="headlineMedium"
-        style={{ fontWeight: "700", textAlign: "center" }}
+        variant="headlineSmall"
+        style={{
+          fontWeight: "700",
+          textAlign: "center",
+        }}
       >
-        Welcome Back
+        Welcome back
       </Text>
 
       <Text
-        variant="bodyMedium"
+        variant="bodySmall"
         style={{
           textAlign: "center",
           color: theme.colors.onSurfaceVariant,
         }}
       >
-        Preparing your dashboard...
+        Preparing your dashboard
       </Text>
 
-      <ActivityIndicator size="small" color={theme.colors.primary} />
+      <ActivityIndicator
+        size="small"
+        color={theme.colors.primary}
+        style={{ marginTop: tokens.spacing.sm }}
+      />
     </View>
   );
 }

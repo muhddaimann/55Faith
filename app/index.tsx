@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { Text, TextInput, Button, Card, useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { useDesign } from "../contexts/designContext";
@@ -11,6 +11,7 @@ import { OverlayToast } from "../components/toast";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [hidePassword, setHidePassword] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -70,17 +71,27 @@ export default function Login() {
           elevation: 4,
         }}
       >
-        <View style={{ marginBottom: tokens.spacing.xl }}>
+        <View style={{ alignItems: "center", marginBottom: tokens.spacing.lg }}>
+          <Image
+            source={require("../assets/images/favicon.png")}
+            style={{
+              width: 88,
+              height: 88,
+              marginBottom: tokens.spacing.sm,
+              resizeMode: "contain",
+            }}
+          />
+
           <Text
-            variant="headlineMedium"
+            variant="bodyLarge"
             style={{
               fontWeight: "700",
               textAlign: "center",
-              marginBottom: tokens.spacing.xs,
             }}
           >
-            Welcome Back
+            Welcome Back, Rockstar
           </Text>
+
           <Text
             variant="bodyMedium"
             style={{
@@ -109,9 +120,15 @@ export default function Login() {
           mode="outlined"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={hidePassword}
           style={{ marginTop: tokens.spacing.md }}
           left={<TextInput.Icon icon="lock-outline" />}
+          right={
+            <TextInput.Icon
+              icon={hidePassword ? "eye-off-outline" : "eye-outline"}
+              onPress={() => setHidePassword(!hidePassword)}
+            />
+          }
           error={showToast}
           returnKeyType="done"
           onSubmitEditing={handleLogin}

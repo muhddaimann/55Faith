@@ -18,7 +18,6 @@ export function NavBar() {
   const { signOut } = useAuth();
   const { hideTabBar } = useTabs();
   const { showModal, hideModal } = useOverlay();
-
   const isHome = pathname.startsWith("/a") || pathname.startsWith("/(tabs)/a");
 
   const isSettings =
