@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
-import { Text, TextInput, Button, Card, useTheme } from 'react-native-paper';
-import { router } from 'expo-router';
-import { useDesign } from '../contexts/designContext';
-import { useAuth } from '../contexts/authContext';
-import { KeyboardLayout } from '../components/keyboardLayout';
-import { OverlayLoader } from '../components/loader';
-import { OverlayToast } from '../components/toast';
+import React, { useState } from "react";
+import { View } from "react-native";
+import { Text, TextInput, Button, Card, useTheme } from "react-native-paper";
+import { router } from "expo-router";
+import { useDesign } from "../contexts/designContext";
+import { useAuth } from "../contexts/authContext";
+import { KeyboardLayout } from "../components/keyboardLayout";
+import { OverlayLoader } from "../components/loader";
+import { OverlayToast } from "../components/toast";
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+
   const theme = useTheme();
   const tokens = useDesign();
   const { signIn, user, isLoading } = useAuth();
 
   React.useEffect(() => {
     if (!isLoading && user) {
-      router.replace('/welcome');
+      router.replace("/welcome");
     }
   }, [user, isLoading]);
 
@@ -28,13 +29,11 @@ export default function Login() {
     setIsSigningIn(true);
     setErrorMsg(null);
     setShowToast(false);
-    
+
     try {
       const response = await signIn(username.trim(), password);
-      if (response.status === 'success') {
-        router.replace('/welcome');
-      } else {
-        const msg = response.message || 'Invalid username or password';
+      if (response.status !== "success") {
+        const msg = response.message || "Invalid username or password";
         setErrorMsg(msg);
         setShowToast(true);
       }
@@ -46,15 +45,18 @@ export default function Login() {
   return (
     <KeyboardLayout
       style={{
-        justifyContent: 'center',
+        justifyContent: "center",
         paddingHorizontal: tokens.spacing.xl,
       }}
     >
-      <OverlayLoader visible={isLoading || isSigningIn} message={isSigningIn ? "Signing in..." : undefined} />
-      
-      <OverlayToast 
+      <OverlayLoader
+        visible={isLoading || isSigningIn}
+        message={isSigningIn ? "Signing in..." : undefined}
+      />
+
+      <OverlayToast
         visible={showToast}
-        message={errorMsg || ''}
+        message={errorMsg || ""}
         variant="error"
         onDismiss={() => setShowToast(false)}
       />
@@ -72,8 +74,8 @@ export default function Login() {
           <Text
             variant="headlineMedium"
             style={{
-              fontWeight: '700',
-              textAlign: 'center',
+              fontWeight: "700",
+              textAlign: "center",
               marginBottom: tokens.spacing.xs,
             }}
           >
@@ -82,7 +84,7 @@ export default function Login() {
           <Text
             variant="bodyMedium"
             style={{
-              textAlign: 'center',
+              textAlign: "center",
               opacity: 0.6,
             }}
           >

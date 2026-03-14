@@ -9,7 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { OverlayConfirm } from "../components/confirm";
 import { OverlayAlert } from "../components/alert";
 import { OverlayToast } from "../components/toast";
-import { router } from 'expo-router';
+import { router } from "expo-router";
 import { useStaffStore } from "./api/staffStore";
 
 type AuthContextType = {
@@ -33,7 +33,7 @@ const isTokenExpired = (token: string) => {
     if (!decoded.exp) return false;
     const now = Date.now() / 1000;
     return decoded.exp < now;
-  } catch (e) {
+  } catch {
     return true;
   }
 };
@@ -43,24 +43,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [showExpiredAlert, setShowExpiredAlert] = useState(false);
-  
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { fetchStaff, clear: clearStaff, staff } = useStaffStore();
+  const staffStore = useStaffStore();
+
+  const resetStores = () => {
+    staffStore.clear();
+  };
 
   const handleSignOut = async () => {
     try {
       await apiLogout();
+    } catch {}
+
+    try {
       await clearStoredToken();
-      clearStaff();
-      setUser(null);
-      router.replace("/goodbye");
-    } catch (e) {
-      console.error("Failed to delete session", e);
-    } finally {
-      setConfirmSignOut(false);
-    }
+    } catch {}
+
+    resetStores();
+    setUser(null);
+    router.replace("/goodbye");
+    setConfirmSignOut(false);
   };
 
   useEffect(() => {
@@ -70,16 +74,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (token) {
           if (isTokenExpired(token)) {
             await clearStoredToken();
+            resetStores();
             setUser(null);
             setShowExpiredAlert(true);
           } else {
             setUser({ status: "success", token });
-            // Optionally fetch staff on reload if token is valid
-            fetchStaff();
+            await staffStore.fetchStaff();
           }
         }
-      } catch (e) {
-        console.error("Failed to load session", e);
+      } catch {
       } finally {
         setIsLoading(false);
       }
@@ -92,24 +95,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     password: string,
   ): Promise<AuthResponse> => {
     try {
+      resetStores();
+
       const response = await apiLogin({ username, password });
+
       if (response.status === "success") {
         setUser(response);
-        
-        // Fetch staff details to get nick_name
-        await fetchStaff();
-        
-        // Use a small delay or check store for the name
-        // fetchStaff updates the store, so we can access it
+        await staffStore.fetchStaff();
+
         const currentStaff = useStaffStore.getState().staff;
         const name = currentStaff?.nick_name || "User";
-        
+
         setSuccessMessage(`Welcome back, ${name}!`);
         setShowSuccessToast(true);
       }
+
       return response;
-    } catch (e) {
-      console.error("Login failed", e);
+    } catch {
       return { status: "error", message: "An unexpected error occurred" };
     }
   };
@@ -142,7 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         onClose={() => setShowExpiredAlert(false)}
       />
 
-      <OverlayToast 
+      <OverlayToast
         visible={showSuccessToast}
         message={successMessage}
         variant="success"
