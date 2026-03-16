@@ -6,11 +6,15 @@ import {
   AuthResponse,
 } from "./api/auth";
 import { jwtDecode } from "jwt-decode";
-import { OverlayConfirm } from "../components/confirm";
-import { OverlayAlert } from "../components/alert";
-import { OverlayToast } from "../components/toast";
+import { useOverlay } from "./overlayContext";
 import { router } from "expo-router";
 import { useStaffStore } from "./api/staffStore";
+import { useAttendanceStore } from "./api/attendanceStore";
+import { useBalanceStore } from "./api/balanceStore";
+import { useBroadcastStore } from "./api/broadcastStore";
+import { useLeaveStore } from "./api/leaveStore";
+import { useRoomStore } from "./api/roomStore";
+import { useSessionStore } from "./api/sessionStore";
 
 type AuthContextType = {
   user: AuthResponse | null;
@@ -41,18 +45,20 @@ const isTokenExpired = (token: string) => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [confirmSignOut, setConfirmSignOut] = useState(false);
-  const [showExpiredAlert, setShowExpiredAlert] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
-  const staffStore = useStaffStore();
+  const { alert, confirm, toast } = useOverlay();
+  const { isExpired, setExpired } = useSessionStore();
 
   const resetStores = () => {
-    staffStore.clear();
+    useStaffStore.getState().clear();
+    useAttendanceStore.getState().clear();
+    useBalanceStore.getState().clear();
+    useBroadcastStore.getState().clear();
+    useLeaveStore.getState().clear();
+    useRoomStore.getState().clear();
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (redirectTo: string = "/goodbye") => {
     try {
       await apiLogout();
     } catch {}
@@ -63,9 +69,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     resetStores();
     setUser(null);
-    router.replace("/goodbye");
-    setConfirmSignOut(false);
+    router.replace(redirectTo as any);
   };
+
+  useEffect(() => {
+    if (isExpired) {
+      handleSignOut("/");
+      alert({
+        title: "Session Expired",
+        message: "Your session has expired. Please login again.",
+      });
+      setExpired(false);
+    }
+  }, [isExpired]);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -76,10 +92,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await clearStoredToken();
             resetStores();
             setUser(null);
-            setShowExpiredAlert(true);
+            alert({
+              title: "Session Expired",
+              message: "Your session has expired. Please login again.",
+            });
           } else {
             setUser({ status: "success", token });
-            await staffStore.fetchStaff();
+            await useStaffStore.getState().fetchStaff();
           }
         }
       } catch {
@@ -101,13 +120,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (response.status === "success") {
         setUser(response);
-        await staffStore.fetchStaff();
+        await useStaffStore.getState().fetchStaff();
 
         const currentStaff = useStaffStore.getState().staff;
         const name = currentStaff?.nick_name || "User";
 
-        setSuccessMessage(`Welcome back, ${name}!`);
-        setShowSuccessToast(true);
+        toast(`Welcome back, ${name}!`);
       }
 
       return response;
@@ -116,40 +134,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signOut = () => {
+    confirm({
+      title: "Sign Out",
+      message: "Are you sure you want to sign out?",
+      confirmText: "Sign Out",
+      onConfirm: () => handleSignOut("/goodbye"),
+      isDestructive: true,
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
         signIn,
-        signOut: () => setConfirmSignOut(true),
+        signOut,
       }}
     >
       {children}
-
-      <OverlayConfirm
-        visible={confirmSignOut}
-        title="Sign Out"
-        message="Are you sure you want to sign out?"
-        confirmText="Sign Out"
-        onConfirm={handleSignOut}
-        onCancel={() => setConfirmSignOut(false)}
-        isDestructive
-      />
-
-      <OverlayAlert
-        visible={showExpiredAlert}
-        title="Session Expired"
-        message="Your session has expired. Please login again."
-        onClose={() => setShowExpiredAlert(false)}
-      />
-
-      <OverlayToast
-        visible={showSuccessToast}
-        message={successMessage}
-        variant="success"
-        onDismiss={() => setShowSuccessToast(false)}
-      />
     </AuthContext.Provider>
   );
 };

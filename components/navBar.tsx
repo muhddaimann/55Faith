@@ -18,8 +18,8 @@ export function NavBar() {
   const { signOut } = useAuth();
   const { hideTabBar } = useTabs();
   const { showModal, hideModal } = useOverlay();
-  const isHome = pathname.startsWith("/a") || pathname.startsWith("/(tabs)/a");
 
+  const isHome = pathname.startsWith("/a") || pathname.startsWith("/(tabs)/a");
   const isSettings =
     pathname.startsWith("/b") || pathname.startsWith("/(tabs)/b");
 
@@ -43,34 +43,24 @@ export function NavBar() {
             onClose={hideModal}
             items={[
               {
-                label: "Check In",
-                icon: "login-variant",
-                onPress: () => router.push("/a/main"),
+                label: "Apply Leave",
+                icon: "file-document-edit-outline",
+                onPress: () => router.push("/a/apply"),
               },
               {
-                label: "Check Out",
-                icon: "logout-variant",
-                onPress: () => router.push("/a/newsflash"),
-              },
-              {
-                label: "View Attendance",
-                icon: "calendar-check-outline",
+                label: "Check Room Availability",
+                icon: "calendar-clock-outline",
                 onPress: () => router.push("/a/room"),
               },
               {
-                label: "Request Adjustment",
-                icon: "clipboard-edit-outline",
-                onPress: () => router.push("/a/main"),
-              },
-              {
-                label: "Book Room",
-                icon: "calendar-clock-outline",
-                onPress: () => router.push("a/newsflash"),
-              },
-              {
-                label: "Apply Leave",
-                icon: "file-document-edit-outline",
-                onPress: () => router.push("a/apply"),
+                label: "Update Staff Details",
+                icon: "account-edit-outline",
+                onPress: () => {
+                  router.push("/b");
+                  setTimeout(() => {
+                    router.push("/b/update");
+                  }, 250);
+                },
               },
             ]}
           />

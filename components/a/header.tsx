@@ -12,6 +12,13 @@ export default function Header() {
   const { greeting, nickName, initials, designation } = useHome();
   const router = useRouter();
 
+  const goProfile = () => {
+    router.push("/b");
+    setTimeout(() => {
+      router.push("/b/update");
+    }, 250);
+  };
+
   return (
     <View
       style={{
@@ -67,15 +74,17 @@ export default function Header() {
           />
         </Pressable>
 
-        <View
-          style={{
+        <Pressable
+          onPress={goProfile}
+          style={({ pressed }) => ({
             width: 48,
             height: 48,
             borderRadius: tokens.radii.full,
             backgroundColor: colors.primary,
             alignItems: "center",
             justifyContent: "center",
-          }}
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
         >
           <Text
             variant="titleMedium"
@@ -86,7 +95,7 @@ export default function Header() {
           >
             {initials}
           </Text>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

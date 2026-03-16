@@ -3,6 +3,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { DesignProvider } from "../contexts/designContext";
 import { ThemeProvider } from "../contexts/themeContext";
 import { OverlayProvider } from "../contexts/overlayContext";
+import { NetworkProvider } from "../contexts/networkContext";
 import { LoaderProvider } from "../contexts/loaderContext";
 import { AuthProvider } from "../contexts/authContext";
 import { TokenProvider } from "../contexts/tokenContext";
@@ -38,15 +39,17 @@ export default function RootLayout() {
       <TokenProvider>
         <DesignProvider>
           <ThemeProvider>
-            <AuthProvider>
-              <LoaderProvider>
-                <OverlayProvider>
-                  <View style={{ flex: 1 }}>
-                    <Stack screenOptions={{ headerShown: false }} />
-                  </View>
-                </OverlayProvider>
-              </LoaderProvider>
-            </AuthProvider>
+            <OverlayProvider>
+              <NetworkProvider>
+                <AuthProvider>
+                  <LoaderProvider>
+                    <View style={{ flex: 1 }}>
+                      <Stack screenOptions={{ headerShown: false }} />
+                    </View>
+                  </LoaderProvider>
+                </AuthProvider>
+              </NetworkProvider>
+            </OverlayProvider>
           </ThemeProvider>
         </DesignProvider>
       </TokenProvider>
